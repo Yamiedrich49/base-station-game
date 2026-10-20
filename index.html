@@ -53,9 +53,22 @@
   .dialog button {width:100%;border:0;border-radius:14px;padding:15px;color:#fff;background:#1e7876;font-weight:850;font-size:13px}
   .dialog button.secondary {background:#edf3ed;color:#3f7770;margin-top:9px}
   .dialog .foot{font-size:10px;color:#8b9b92;margin-top:13px}
+  .score-card.concealed #score{color:#63867d;font-size:35px;letter-spacing:.02em}
+  .score-card.concealed .percent{display:none}
+  .score-card.concealed .bar>i{width:0!important}
+  .score-card.concealed .bar{background:repeating-linear-gradient(90deg,rgba(69,112,101,.14) 0 10px,rgba(69,112,101,.035) 10px 17px)}
+  .phase-chip{display:inline-flex;margin-top:5px;padding:4px 8px;border-radius:6px;background:rgba(34,130,121,.10);color:#427870;font-size:10px;font-weight:800;letter-spacing:.03em}
+  .heat-legend{position:absolute;top:calc(env(safe-area-inset-top) + 168px);left:18px;z-index:2;padding:6px 10px;border-radius:12px;background:rgba(253,255,251,.82);border:1px solid rgba(44,91,81,.11);pointer-events:none;display:flex;align-items:center;gap:7px;color:#58756e;font-size:10px;font-weight:760;box-shadow:0 3px 14px #47615a0c}
+  .heat-swatch{display:flex;gap:2px}.heat-swatch i{display:inline-block;width:16px;height:7px;border-radius:2px}
+  .summary-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .stat{background:#edf3ed;border-radius:10px;padding:10px 8px;text-align:center}
+  .stat .n{font-size:19px;font-weight:850;color:#226e68;font-variant-numeric:tabular-nums}
+  .stat .t{font-size:10px;font-weight:750;color:#66817b}
+  .dialog .next-hint{font-size:11px;color:#637d77;margin:0 0 14px}
+  #regionResult{margin:10px 1px 2px;color:#537b74;font-size:11px;font-weight:750;line-height:1.5}
   #load-warning{position:absolute;z-index:20;display:none;left:10%;right:10%;top:40%;background:#fff;border-radius:16px;padding:20px;font-size:13px}
   @media(min-width:700px){#app{max-width:490px;height:min(920px,100dvh);margin:auto;box-shadow:0 0 0 1px rgba(50,70,60,.08),0 15px 85px rgba(40,64,59,.12)} body{display:flex;justify-content:center;align-items:center;background:#cddad1} }
-  @media(max-height:690px){ header{padding-top:calc(env(safe-area-inset-top) + 11px)} #tip{top:calc(env(safe-area-inset-top) + 117px)} .help{top:calc(env(safe-area-inset-top) + 106px)} .bottom{padding-top:13px;padding-bottom:calc(env(safe-area-inset-bottom) + 8px)} .cta{min-height:48px}.under{margin-top:4px} }
+  @media(max-height:690px){.heat-legend{top:calc(env(safe-area-inset-top) + 148px)} header{padding-top:calc(env(safe-area-inset-top) + 11px)} #tip{top:calc(env(safe-area-inset-top) + 117px)} .help{top:calc(env(safe-area-inset-top) + 106px)} .bottom{padding-top:13px;padding-bottom:calc(env(safe-area-inset-bottom) + 8px)} .cta{min-height:48px}.under{margin-top:4px} }
 </style>
 </head>
 <body>
@@ -64,25 +77,27 @@
  <div class="grain"></div>
  <header>
   <div class="topline">
-   <div><div class="eyebrow">STAGE 01 · LOW BAND</div><h1>電波を届けよう！</h1><div class="sub">屋上アンテナ × はじめての方位調整</div></div>
-   <div class="score-card"><div class="score-label">通信充足率</div><div class="score-row"><span id="score">0</span><span class="percent">%</span></div><div class="bar"><i id="scorebar"></i></div><div class="status">クリア <b>70%</b> ・ 完全攻略 <b>100%</b></div></div>
+   <div><div class="eyebrow">STAGE 01 · LOW BAND <span id="phaseTag">1 / 2</span></div><h1 id="mainTitle">電波を届けよう！</h1><div class="sub" id="subTitle">練習：アンテナの向きを合わせよう</div></div>
+   <div id="scoreCard" class="score-card concealed"><div class="score-label" id="scoreLabel">通信充足率 · 判定前</div><div class="score-row"><span id="score">??</span><span class="percent">%</span></div><div class="bar"><i id="scorebar"></i></div><div class="status">合格 <b>70%</b> · 完全攻略 <b>100%</b></div></div>
   </div>
  </header>
  <button class="help" id="help" aria-label="操作方法を見る">?</button>
- <div id="tip">👆 青いアンテナをタップして回してみよう</div>
+ <div id="tip">アンテナをタップして、リングを回そう</div>
+ <div class="heat-legend"><span>電波の強さ</span><span>弱</span><span class="heat-swatch"><i style="background:#568fc9"></i><i style="background:#efc15b"></i><i style="background:#e3704b"></i></span><span>強</span></div>
  <div class="bottom">
   <div class="control-row"><button id="resetCamera" class="mini" aria-label="視点を戻す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 11a9 9 0 1 1 3 7"/><path d="M3 4v7h7"/></svg> 視点を戻す</button><div id="rotGuide">街をドラッグで回転 · 2本指で拡大</div></div>
   <button id="complete" class="cta">整備完了 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-  <div class="under"><span>BEST <strong id="best">—</strong></span><span>·</span><span>何度でも試せます</span></div>
+  <div class="under"><span id="underText">得点は「整備完了」の後で発表</span><span id="bestHolder" hidden> · BEST <strong id="best">—</strong></span></div>
  </div>
  <div id="result" class="modal hidden" role="dialog" aria-modal="true" aria-label="ステージ結果"><div class="dialog">
   <div class="seal" id="seal">🏅</div><div class="eyebrow" id="resultLabel">STAGE 01</div><h2 id="resultTitle">ステージクリア！</h2>
-  <div class="score-big" id="resultScore">100%</div><p id="resultText">アンテナの向きだけで、街の通信状況が改善しました。</p>
+  <div class="score-big" id="resultScore">100%</div><p id="resultText">判定結果です。</p>
+  <div class="summary-group"><div class="stat"><div class="n" id="connectedCount">0人</div><div class="t">通信可能</div></div><div class="stat"><div class="n" id="missingCount">0人</div><div class="t">未充足</div></div></div><div id="regionResult" hidden></div>
   <div class="summary"><span>自己ベスト</span><b id="bestModal">100%</b></div>
-  <button id="continue">街に戻る・さらに調整</button><button class="secondary" id="restart">最初からやり直す</button>
-  <div class="foot">STAGE 1 プロトタイプ · 次のステージは未実装</div>
+  <button id="continue">街に戻る・再調整</button><button class="secondary" id="inspect">結果を地図で見る</button>
+  <div class="foot">STAGE 1 · Ver.0.2 · 練習と小さなパズル</div>
  </div></div>
- <div id="guide" class="modal hidden" role="dialog" aria-modal="true" aria-label="操作ガイド"><div class="dialog"><div class="seal">📡</div><h2>操作ガイド</h2><p style="text-align:left;padding:2px 8px">① 屋上の青いアンテナをタップ<br>② 表示されたリングをなぞって向きを変更<br>③ 利用者の赤い点が緑色に変わるよう調整<br>④ 「整備完了」で結果を記録<br><br>アンテナ以外の場所をドラッグすると街を回転できます。2本指のピンチでズーム、2本指の移動で視点をずらせます。</p><button id="guideClose">わかった！</button></div></div>
+ <div id="guide" class="modal hidden" role="dialog" aria-modal="true" aria-label="操作ガイド"><div class="dialog"><div class="seal">📡</div><h2>操作ガイド</h2><p style="text-align:left;padding:2px 8px">① 屋上の青いアンテナをタップ<br>② 表示されたリングをなぞって向きを変更<br>③ 電波の強弱と利用者の位置を見て予測<br>④ 「整備完了」を押して初めて得点を判定<br><br>リングやアンテナ以外の場所は1本指のドラッグで街を回転できます。2本指のピンチでズーム、2本指の移動で視点をずらせます。</p><button id="guideClose">わかった！</button></div></div>
  <div id="load-warning">表示処理で問題が発生しました。ページを再読み込みしてください。</div>
 </div>
 <script>
@@ -101,10 +116,10 @@ let yaw= -0.57, elevation=45*RAD, scale=25, panX=0, panY=0;
 const home={yaw:-0.57,scale:25,panX:0,panY:0};
 const base={x:-0.25,z:-0.15,h:2.7};
 let heading=-Math.PI/2, headingDraw=-Math.PI/2, selected=false, tipDismissed=false;
-let score=0,displayScore=0, best=0, dirty=true, pointerHint=0, lastTime=0;
+let score=0, best=0, dirty=true, lastTime=0, phase=0, revealed=false, success=false;
 const cameraState={drag:false,moved:false,id:null,x:0,y:0,headingStart:0,grab:0,startAngle:0};
 const touches=new Map(); let pinch=null;
-const stageID='station-puzzle-stage-01-v1';
+const stageID='station-puzzle-stage-01-v02-part2';
 try{best=Number(localStorage.getItem(stageID)||0)||0}catch(e){}
 const buildings=[
   {x:-3.70,z:-3.55,w:1.42,d:1.43,h:1.65,shade:'#b8c8b9',roof:'#d6ddd0',type:'home'},
@@ -126,23 +141,38 @@ const buildings=[
 ];
 const treeSpots=[[-4.9,-4.7],[-2.7,-4.85],[.05,-4.8],[2.25,-4.8],[4.9,-3.2],[-4.85,-2.1],[-4.8,.0],[4.85,.15],[-4.8,2.55],[-2.75,2.7],[3.0,3.1],[4.9,4.65],[.1,4.85],[-4.75,4.4]];
 // Each position represents a small population cluster; sub-points are invisible for a smoother, truthful weighted score.
-const groups=[
-  {x:3.25,z:-1.90,n:135},{x:4.05,z:-1.25,n:120},{x:4.38,z:-.45,n:165},
-  {x:3.35,z:.35,n:140},{x:4.22,z:1.03,n:120},{x:3.05,z:1.62,n:140},
-  {x:4.65,z:1.89,n:90},{x:3.25,z:-.85,n:90}
+const populationSets=[
+ // PART 1: deliberately compact group to teach direct aiming.
+ [
+  {x:3.00,z:-.80,n:115},{x:3.50,z:-.46,n:140},{x:4.10,z:-.25,n:165},
+  {x:4.20,z:.30,n:140},{x:3.65,z:.67,n:120},{x:3.15,z:.90,n:140},
+  {x:4.60,z:.45,n:90},{x:3.60,z:.20,n:90}
+ ],
+ // PART 2: two groups spread north/south: neither group alone reaches 100%.
+ [
+  {x:2.85,z:-2.35,n:95},{x:3.62,z:-2.62,n:120},{x:4.42,z:-1.78,n:105},
+  {x:4.16,z:-1.15,n:90},{x:2.85,z:2.25,n:95},{x:3.62,z:2.48,n:120},
+  {x:4.42,z:1.68,n:110},{x:4.16,z:1.03,n:100},
+  {x:3.45,z:-2.0,n:80},{x:3.45,z:1.90,n:85}
+ ]
 ];
-const total=groups.reduce((a,g)=>a+g.n,0);
-const samples=[];
 const offsets=[[0,0],[-.16,-.12],[.14,-.08],[-.12,.15],[.16,.12],[-.05,-.21],[.09,.22]];
-for(let gi=0;gi<groups.length;gi++)for(let k=0;k<offsets.length;k++)samples.push({gi,x:groups[gi].x+offsets[k][0],z:groups[gi].z+offsets[k][1],n:groups[gi].n/offsets.length});
+let groups=[], samples=[], total=1000;
+function buildPopulation(){
+ groups=populationSets[phase].map(g=>({...g,good:0}));
+ samples=[];total=groups.reduce((a,g)=>a+g.n,0);
+ for(let gi=0;gi<groups.length;gi++)for(let k=0;k<offsets.length;k++)
+  samples.push({gi,x:groups[gi].x+offsets[k][0],z:groups[gi].z+offsets[k][1],n:groups[gi].n/offsets.length});
+}
+buildPopulation();
 function currentSig(x,z,h=0){
  const dx=x-base.x,dz=z-base.z,dist=Math.hypot(dx,dz),delta=norm(Math.atan2(dz,dx)-heading);
- const angLoss=16*(1-Math.cos(delta));
- const pathLoss=20*Math.log10(1+dist*.9);
+ const angLoss=24.5*(1-Math.cos(delta));
+ const pathLoss=21*Math.log10(1+dist*.94);
  const verticalPenalty=Math.abs(h-base.h)*.25;
- return -53-pathLoss-angLoss-verticalPenalty;
+ return -52-pathLoss-angLoss-verticalPenalty;
 }
-const threshold=-78.4;
+const threshold=-75.6;
 function calculate(){
  let sum=0;
  for(const g of groups)g.good=0;
@@ -151,13 +181,13 @@ function calculate(){
  dirty=true;
 }
 function shadeToHeat(db){
- // Cool high signal / amber marginal / warm pink low signal; intentionally transparent to keep streets legible.
- const t=clamp((db+96)/32,0,1);
+ // Display RECEIVED SIGNAL strength only, not the connection threshold or pass/fail.
+ // Strong warm coral, moderate ochre, weak royal blue, with a legible overlay.
+ const t=clamp((db+99)/45,0,1);
  let r,g,b;
- if(t<.43){let u=t/.43;r=lerp(219,235,u);g=lerp(144,184,u);b=lerp(138,108,u)}
- else if(t<.72){let u=(t-.43)/.29;r=lerp(235,133,u);g=lerp(184,196,u);b=lerp(108,173,u)}
- else {let u=(t-.72)/.28;r=lerp(133,47,u);g=lerp(196,158,u);b=lerp(173,159,u)}
- return `rgba(${r|0},${g|0},${b|0},.27)`;
+ if(t<.48){const u=t/.48;r=lerp(67,238,u);g=lerp(130,192,u);b=lerp(198,82,u)}
+ else{const u=(t-.48)/.52;r=lerp(238,225,u);g=lerp(192,98,u);b=lerp(82,67,u)}
+ return `rgba(${r|0},${g|0},${b|0},.64)`;
 }
 function project(x,z,y=0){const c=Math.cos(yaw),s=Math.sin(yaw);return {x:W*.5 +panX +(x*c-z*s)*scale, y:H*.51+panY +(x*s+z*c)*Math.sin(elevation)*scale-y*Math.cos(elevation)*scale};}
 function path(points,fill,stroke,lw=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
@@ -194,7 +224,7 @@ function drawGround(){
 }
 function drawHeat(){
  // Ground-plane heat shading; sampled from actual RSRP-like model.
- let step=.36;
+ let step=.34;
  for(let x=-5.28;x<5.20;x+=step)for(let z=-5.22;z<5.21;z+=step){
    const val=currentSig(x+step*.5,z+step*.5), fill=shadeToHeat(val);
    worldRect(x,z,x+step+.015,z+step+.015,.07,fill);
@@ -292,22 +322,30 @@ function drawRing(time){
  // Ring never occludes user dots; it is anchored around active antenna only.
 }
 function drawPeople(){
- // World-anchored billboards that scale subtly with zoom to avoid covering the map.
+ // Neutral during design. After evaluation, green=connected, orange=partial, red=unserved.
  const factor=clamp(scale/25,.85,1.25);
  for(const g of groups){
    let p=project(g.x,g.z,.15),fr=g.good/g.n;
-   let color=fr>.98?'#279c82':fr<.02?'#db766d':'#e0a858';
-   // drop shadow, translucent halo
+   let color=revealed?(fr>.98?'#299b79':fr<.02?'#d86b59':'#dba047'):'#507d90';
    circle2(p.x+1,p.y+2,9.5*factor,'rgba(35,65,58,.10)');
-   circle2(p.x,p.y,7.8*factor,'rgba(255,255,252,.94)');
+   circle2(p.x,p.y,7.8*factor,'rgba(255,255,252,.97)');
    circle2(p.x,p.y,5.5*factor,color);
-   if(g.n>=140 && scale>21){
-     let label=`${g.n}人`,tx=p.x,ty=p.y-19*factor;
-     ctx.font=`750 ${10*factor}px -apple-system, sans-serif`;let ww=ctx.measureText(label).width+15;
-     ctx.fillStyle='rgba(253,255,252,.93)';
-     rounded(tx-ww/2,ty-11*factor,ww,20*factor,10*factor,true);
-     textAt(label,tx,ty-1,`750 ${10*factor}px -apple-system, sans-serif`,'#56746f');
-   }
+   if(!revealed)circle2(p.x,p.y,1.45*factor,'rgba(255,255,255,.88)');
+ }
+ // One population label per district, instead of overlapping labels for every sample cluster.
+ function badge(x,z,str,yOffset=-32){
+   const p=project(x,z,.22),font=`800 ${10.5*factor}px -apple-system, sans-serif`;
+   ctx.font=font;const ww=ctx.measureText(str).width+24*factor;
+   let bx=clamp(p.x-ww/2,6,W-ww-6),by=clamp(p.y+yOffset*factor,153,H-165);
+   ctx.fillStyle='rgba(252,255,250,.96)';
+   rounded(bx,by,ww,24*factor,12*factor,true);
+   ctx.strokeStyle='rgba(65,105,101,.13)';ctx.lineWidth=.7;ctx.stroke();
+   textAt(str,bx+ww/2,by+12*factor,font,'#426e71');
+ }
+ if(phase===0)badge(3.78,-.85,`利用者 ${total.toLocaleString('ja-JP')}人`,-52);
+ else{
+   badge(3.95,-2.2,'A地区 490人',-77);
+   badge(3.95,1.9,'B地区 510人',-29);
  }
 }
 function rounded(x,y,w,h,r,fill){
@@ -340,15 +378,20 @@ function resize(){
  dirty=true;calculate();
 }
 function updateScoreUI(){
- document.getElementById('score').textContent=displayScore.toFixed(0);
- document.getElementById('scorebar').style.width=clamp(displayScore,0,100)+'%';
+ const concealed=!revealed;
+ document.getElementById('scoreCard').classList.toggle('concealed',concealed);
+ document.getElementById('scoreLabel').textContent=concealed?'通信充足率 · 判定前':'通信充足率 · 判定結果';
+ document.getElementById('score').textContent=concealed?'??':score.toFixed(1).replace(/\.0$/,'');
+ document.getElementById('scorebar').style.width=concealed?'0%':clamp(score,0,100)+'%';
+ document.getElementById('bestHolder').hidden=concealed || !best;
  document.getElementById('best').textContent=best?best.toFixed(1).replace(/\.0$/,'')+'%':'—';
+ document.getElementById('underText').textContent=concealed?'得点は「整備完了」の後で発表':'判定結果を表示中 · もう一度設計できます';
+ document.getElementById('complete').innerHTML=concealed?'整備完了　→':'設計に戻る　↩';
 }
 function animate(time){
  const delta=Math.min(time-lastTime||16,50);lastTime=time;
  if(Math.abs(norm(heading-headingDraw))>.001){headingDraw+=norm(heading-headingDraw)*Math.min(1,delta*.019);dirty=true;}
- if(Math.abs(score-displayScore)>.04){displayScore+=clamp(score-displayScore,-delta*.14,delta*.14);dirty=true;}
- else displayScore=score;
+
  if(dirty || selected || !tipDismissed){
   ctx.setTransform(D,0,0,D,0,0);drawWorld(time);updateScoreUI();dirty=false;
  }
@@ -356,22 +399,23 @@ function animate(time){
 }
 function hideTip(){tipDismissed=true;document.getElementById('tip').classList.add('hide')}
 function startPointer(ev){
- if(document.getElementById('guide').classList.contains('hidden')===false||document.getElementById('result').classList.contains('hidden')===false)return;
+ if(!document.getElementById('guide').classList.contains('hidden')||!document.getElementById('result').classList.contains('hidden'))return;
  ev.preventDefault();canvas.setPointerCapture(ev.pointerId);touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
  const b=canvas.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;
  if(touches.size>=2){
-   let pts=[...touches.values()]; pinch={d:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2,scale,panX,panY}; cameraState.id=null;return;
+   let pts=[...touches.values()];pinch={d:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2,scale,panX,panY};
+   cameraState.id=null;canvas.classList.add('dragging');return;
  }
  const p=stationCenter(),distance=Math.hypot(x-p.x,y-p.y);
+ const onRing=selected&&Math.abs(distance-55)<20;
+ const onAntenna=distance<28;
  cameraState.id=ev.pointerId;cameraState.x=x;cameraState.y=y;cameraState.moved=false;
- if(distance<(selected?80:37)){
-   selected=true;cameraState.drag=distance<24?'aim':'antenna';cameraState.startAngle=Math.atan2(y-p.y,x-p.x);
-   cameraState.headingStart=heading;
-   // A ring can be touched anywhere, direct drag when near antenna adjusts heading without a jump.
+ if(onAntenna||onRing){
+   selected=true;cameraState.drag=onAntenna?'aim':'antenna';
+   cameraState.startAngle=Math.atan2(y-p.y,x-p.x);cameraState.headingStart=heading;
    hideTip();
  }else{
    cameraState.drag='orbit';
-   // tap elsewhere deselects if no meaningful drag later
  }
  canvas.classList.add('dragging');dirty=true;
 }
@@ -414,27 +458,66 @@ canvas.addEventListener('pointercancel',endPointer);
 canvas.addEventListener('wheel',e=>{e.preventDefault();scale=clamp(scale*(e.deltaY>0?.91:1.09),16,48);dirty=true;},{passive:false});
 document.getElementById('resetCamera').addEventListener('click',()=>{yaw=home.yaw;elevation=45*RAD;scale=home.scale;panX=panY=0;dirty=true});
 const result=document.getElementById('result');
-function showResult(){
- const sc=score;
- if(sc>best){best=sc;try{localStorage.setItem(stageID,String(best))}catch(e){}}
- document.getElementById('resultScore').textContent=sc.toFixed(1).replace(/\.0$/,'')+'%';
- document.getElementById('bestModal').textContent=best.toFixed(1).replace(/\.0$/,'')+'%';
- let title,description,seal,label;
- if(sc>=99.95){title='完全攻略！';description='通信充足率100%。街の全利用者に電波を届けました！';seal='🏆';label='PERFECT · STAGE 01';}
- else if(sc>=70){title='ステージクリア！';description='通信環境を改善できました。100%を目指して、さらに調整してみよう。';seal='🏅';label='CLEAR · STAGE 01';}
- else {title='あと少し！';description='クリア目標は70%。アンテナの向きを変えると通信できる人が増えます。';seal='📡';label='KEEP TRYING · STAGE 01';}
- document.getElementById('resultTitle').textContent=title;document.getElementById('resultText').textContent=description;document.getElementById('seal').textContent=seal;document.getElementById('resultLabel').textContent=label;
- result.classList.remove('hidden');
+function setPhase(next){
+ phase=next;revealed=false;success=false;selected=false;
+ heading=-Math.PI/2;headingDraw=heading;yaw=home.yaw;elevation=45*RAD;
+ panX=panY=0;scale=home.scale;
+ buildPopulation();calculate();
+ document.getElementById('phaseTag').textContent=`${phase+1} / 2`;
+ document.getElementById('mainTitle').textContent=phase===0?'電波を届けよう！':'2つの街区をカバー';
+ document.getElementById('subTitle').textContent=phase===0?'練習：利用者のいる方向へ向ける':'パズル：2か所の利用者を同時にカバー';
+ document.getElementById('tip').textContent=phase===0?'アンテナをタップして、リングを回そう':'2つの利用者集団に届く向きを探そう';
+ document.getElementById('tip').classList.remove('hide');tipDismissed=false;
+ document.getElementById('score').textContent='??';
+ dirty=true;updateScoreUI();
 }
-document.getElementById('complete').addEventListener('click',showResult);
-document.getElementById('continue').addEventListener('click',()=>{result.classList.add('hidden');dirty=true});
-document.getElementById('restart').addEventListener('click',()=>{result.classList.add('hidden');heading=-Math.PI/2;headingDraw=heading;selected=false;yaw=home.yaw;elevation=45*RAD;panX=panY=0;scale=home.scale;calculate();dirty=true});
+function backToDesign(){
+ revealed=false;result.classList.add('hidden');dirty=true;updateScoreUI();
+}
+function showResult(){
+ revealed=true; // Results are only now revealed, not during editing.
+ const sc=score;
+ if(phase===1&&sc>best){best=sc;try{localStorage.setItem(stageID,String(best))}catch(e){}}
+ const good=Math.round(sc*total/100), missing=total-good;
+ document.getElementById('resultScore').textContent=sc.toFixed(1).replace(/\.0$/,'')+'%';
+ document.getElementById('connectedCount').textContent=good.toLocaleString('ja-JP')+'人';
+ document.getElementById('missingCount').textContent=missing.toLocaleString('ja-JP')+'人';
+ const regionLine=document.getElementById('regionResult');
+ regionLine.hidden=(phase===0);
+ if(phase===1){
+   const servedA=Math.round([0,1,2,3,8].reduce((n,i)=>n+groups[i].good,0));
+   const servedB=Math.round([4,5,6,7,9].reduce((n,i)=>n+groups[i].good,0));
+   regionLine.textContent=`A地区 ${servedA} / 490人　·　B地区 ${servedB} / 510人`;
+ }
+ document.getElementById('bestModal').textContent=phase===1?(best.toFixed(1).replace(/\.0$/,'')+'%'):'練習ステージ';
+ let title,description,seal,label;
+ success=sc>=70;
+ if(sc>=99.95){title=phase===0?'操作練習クリア！':'パズル完全攻略！';description=phase===0?'電波の向きをつかめたね。次は2つの地区を同時にカバーしよう。':'全利用者に通信を届けた！ 別の向きでも100%になるか試してみよう。';seal='🏆';label='PERFECT · PART '+(phase+1);}
+ else if(success){title=phase===0?'練習クリア！':'ステージクリア！';description=phase===0?'操作はバッチリ。次は少し頭を使う2か所同時カバーへ。':'70%以上でクリア。100%を目指すなら、2つの集団の位置を見比べよう。';seal='🏅';label='CLEAR · PART '+(phase+1);}
+ else {title='まだ改善できる！';description=phase===0?'まずは利用者の多い方向に電波を向けてみよう。':'一方の地区だけに向けすぎていないかな？ 両方に届く向きを予想しよう。';seal='📡';label='RETRY · PART '+(phase+1);}
+ document.getElementById('resultTitle').textContent=title;
+ document.getElementById('resultText').textContent=description;
+ document.getElementById('seal').textContent=seal;
+ document.getElementById('resultLabel').textContent=label;
+ document.getElementById('continue').textContent=phase===0&&success?'次の課題へ →':'設計に戻って再調整';
+ updateScoreUI();dirty=true;result.classList.remove('hidden');
+}
+document.getElementById('complete').addEventListener('click',()=>{
+ if(revealed)backToDesign();else showResult();
+});
+document.getElementById('continue').addEventListener('click',()=>{
+ result.classList.add('hidden');
+ if(phase===0&&success)setPhase(1);else backToDesign();
+});
+document.getElementById('inspect').addEventListener('click',()=>{
+ result.classList.add('hidden');revealed=true;dirty=true;updateScoreUI();
+});
 document.getElementById('help').addEventListener('click',()=>document.getElementById('guide').classList.remove('hidden'));
 document.getElementById('guideClose').addEventListener('click',()=>document.getElementById('guide').classList.add('hidden'));
 window.addEventListener('resize',resize);
 window.addEventListener('orientationchange',()=>setTimeout(resize,100));
-resize();calculate();requestAnimationFrame(animate);
-window.__stationPrototype={get score(){return score},get heading(){return heading},setHeading:(d)=>{heading=d*RAD;selected=true;hideTip();calculate()},get selected(){return selected},reset:()=>{heading=-Math.PI/2;selected=false;calculate()}};
+resize();setPhase(0);requestAnimationFrame(animate);
+window.__stationPrototype={get score(){return score},get phase(){return phase},get revealed(){return revealed},get heading(){return heading},get yaw(){return yaw},get selected(){return selected},setHeading:(d)=>{heading=d*RAD;selected=true;hideTip();calculate()},setPhase,reset:()=>setPhase(0)};
 })();
 </script>
 </body>
