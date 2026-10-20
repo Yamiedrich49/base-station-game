@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#071720"><title>LEVEL 100 — NIGHT NETWORK | 基地局パズル</title>
+<style>
+:root{--ink:#243c3e;--mute:#6d8380;--main:#177d79;--panel:#f9fcf7;--line:#dce5de}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:#d5e1d6;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+button{font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:default}
+#app{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;background:#dce9de}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:absolute;z-index:4;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 13px) 15px 16px;pointer-events:none;background:linear-gradient(#eaf1e9 0%,#eaf1e9f4 68%,#eaf1e900)}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:start}.eyebrow{font-size:10px;font-weight:850;letter-spacing:.10em;color:#527d77}.title{font-size:17px;font-weight:900;letter-spacing:-.05em;margin:4px 0}.subtitle{font-size:10px;color:#708883;font-weight:700;line-height:1.5}
+.right{text-align:right}.smallcaps{font-size:10px;font-weight:750;color:#6a837c}.budget{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:#226f68;letter-spacing:-.04em}.budget.over{color:#ca664d}.budget small{font-size:12px;color:#799189}
+.progress{margin-top:7px;padding:7px 9px;border-radius:10px;display:flex;align-items:center;gap:6px;background:#f8fcf5dd;border:1px solid #d4e5dbaa;color:#54746f;font-size:10px;font-weight:740}.progress b{color:#306e69}
+#hint{position:absolute;z-index:5;top:calc(env(safe-area-inset-top) + 121px);left:50%;transform:translateX(-50%);white-space:nowrap;max-width:95%;padding:9px 13px;border-radius:40px;background:#fffff5f2;box-shadow:0 4px 16px #3153481c;border:1px solid #dce5df;font-size:11px;color:#416c65;font-weight:760;text-align:center;pointer-events:none;transition:opacity .2s}#hint.off{opacity:0}
+.actionside{position:absolute;z-index:5;top:calc(env(safe-area-inset-top) + 180px);left:12px;right:auto;display:flex;flex-direction:column;gap:7px}
+.micro{background:#fffff1ea;box-shadow:0 3px 13px #24443f16;border:1px solid #dae5db;border-radius:12px;padding:9px 10px;color:#587a73;font-weight:800;font-size:10px;min-height:34px}
+.bottom{position:absolute;z-index:6;left:0;right:0;bottom:0;padding:27px 12px calc(env(safe-area-inset-bottom) + 11px);background:linear-gradient(0deg,#e6eee7 0%,#e6eee7fc 78%,#e6eee700);pointer-events:none}
+.palette-label{font-size:10px;color:#617c72;font-weight:800;margin:0 0 6px 4px;display:flex;justify-content:space-between}.palette-label b{color:#286e67}
+.palette{display:flex;gap:7px;pointer-events:auto}
+.equip{flex:1;min-width:0;background:#fcfdf9e8;border:1.5px solid #dae6dc;box-shadow:0 5px 12px #3855470b;border-radius:12px;padding:9px 3px 7px;text-align:center;color:#36585a;touch-action:none;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative}
+.equip.selected{border-color:#1d9695;background:#e3f5ef;box-shadow:0 0 0 2px #7fd9bc55}.equip.used{opacity:.5}.equip b{font-size:11px;font-weight:850}.equip small{font-size:10px;color:#648079}.equip .symbol{font-size:20px;line-height:1.1}.equip .submark{position:absolute;top:-7px;right:1px;font-size:9px;background:#d1eee1;color:#28685c;border-radius:8px;padding:2px 5px;font-weight:900}
+.controls{margin-top:9px;display:flex;gap:8px;pointer-events:auto}.mutedBtn{width:41%;min-height:49px;border:1px solid #ceded5;background:#f9fcf5;border-radius:13px;color:#42766c;font-size:12px;font-weight:830}.go{flex:1;min-height:49px;background:linear-gradient(115deg,#17646a,#188c7c);color:white;font-weight:900;border:0;border-radius:13px;font-size:14px;box-shadow:0 6px 18px #1d7a6940}.go:active{transform:scale(.985)}.fine{font-size:9px;text-align:center;margin:7px auto 0;color:#71897f;font-weight:720}
+.legend{position:absolute;z-index:3;left:12px;bottom:calc(env(safe-area-inset-bottom) + 190px);background:#fffff4d9;border-radius:11px;padding:7px 9px;border:1px solid #dee8de;display:flex;align-items:center;gap:5px;color:#607b74;font-size:9px;font-weight:800;pointer-events:none}
+.grad{width:62px;height:8px;border-radius:5px;background:linear-gradient(90deg,#4677bd,#7ba2c6,#d2c766,#eb9850,#db5345)}
+.siteinfo{position:absolute;z-index:6;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 202px);border:1px solid #cdded5;border-radius:15px;background:#fffff8ef;padding:10px 12px;box-shadow:0 8px 18px #47605225;display:none;gap:7px;align-items:center}
+.siteinfo.visible{display:flex}.siteinfo .copy{flex:1;min-width:0}.siteinfo b{font-size:12px}.siteinfo p{margin:3px 0 0;font-size:10px;color:#6a827c;line-height:1.5}.siteinfo button{border:1px solid #d9e2d8;background:white;border-radius:9px;color:#a05e57;font-size:11px;font-weight:830;padding:10px}
+#toast{position:absolute;left:50%;transform:translateX(-50%);top:48%;z-index:7;background:#223e3ce9;color:#fff;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:750;line-height:1.5;max-width:85%;text-align:center;display:none;pointer-events:none}
+.overlay{position:absolute;inset:0;z-index:12;background:#223e3ca8;backdrop-filter:blur(7px);display:flex;justify-content:center;align-items:center;padding:17px}.overlay.hidden{display:none}
+.panel{width:min(100%,420px);max-height:min(90dvh,850px);overflow:auto;background:#fbfdf8;border-radius:24px;padding:22px 19px 18px;box-shadow:0 24px 70px #0a282c50;text-align:center}
+.panel .ic{font-size:38px;margin-bottom:4px}.panel h2{font-size:20px;margin:8px 0;font-weight:900;letter-spacing:-.02em}.panel p{font-size:12px;line-height:1.7;color:#68817b;margin:5px 0 12px}.bigScore{font-size:48px;font-weight:900;color:#18786f;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.srow{display:flex;gap:7px;margin:10px 0}.sstat{flex:1;background:#e9f2ea;border-radius:10px;padding:8px 4px}.sstat strong{display:block;font-size:17px;font-variant-numeric:tabular-nums}.sstat span{font-size:10px;color:#6c8279}
+.districts{text-align:left;border:1px solid #e0e9e2;border-radius:12px;overflow:hidden;margin:11px 0}.dline{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #e0e9e2;font-size:11px}.dline:last-child{border:0}.dline .dname{width:75px;font-weight:820}.dline .dcount{margin-left:auto;font-weight:850;font-variant-numeric:tabular-nums}.dline .diagnosis{font-size:9px;color:#8e6254}.dline.good{background:#edf8ec}.dline.bad{background:#fff1e8}
+.panelBtns{display:flex;gap:8px;margin-top:12px}.panelBtns button{flex:1;border:0;padding:13px 8px;border-radius:12px;font-weight:840;font-size:12px;color:#fff;background:#1c7c75}.panelBtns button.secondary{background:#e6efe9;color:#48766d}
+.rule{text-align:left;font-size:12px;line-height:1.8;color:#526e69;padding:8px 4px}.rule b{color:#244841}.rule .em{display:inline-block;border-radius:7px;padding:1px 6px;background:#e5f2ed;font-weight:850}.rule hr{border:0;border-top:1px solid #e1e8e1;margin:10px 0}
+@media(min-width:700px){#app{max-width:480px;height:min(920px,100dvh);margin:auto;box-shadow:0 14px 90px #213d353b}body{display:flex;align-items:center;justify-content:center}}
+@media(max-height:720px){header{padding-top:calc(env(safe-area-inset-top) + 8px)}.progress{padding:4px 8px}.bottom{padding-top:12px;padding-bottom:calc(env(safe-area-inset-bottom) + 5px)}.equip{min-height:62px;padding:6px 3px 4px}.equip .symbol{font-size:16px}.controls{margin-top:6px}.go,.mutedBtn{min-height:43px}.fine{margin-top:4px}.legend{bottom:calc(env(safe-area-inset-bottom) + 169px)}.siteinfo{bottom:calc(env(safe-area-inset-bottom) + 180px)}#hint{top:calc(env(safe-area-inset-top) + 111px)}}
+
+/* LEVEL 100 — redesigned mobile-first night operations interface */
+:root{--ink:#eaf7fa;--mute:#9db7bc;--main:#50dbc6;--panel:#102936;--line:#284856}
+html,body{background:#03121e;color:var(--ink)}
+#app{background:#061927}
+canvas{background:#071a2a}
+header{background:linear-gradient(180deg,#061b2cf9 0%,#0b2331f2 70%,#0b233100);padding:calc(env(safe-area-inset-top) + 13px) 17px 29px}
+.eyebrow{font-size:9px;letter-spacing:.19em;color:#69c9d6}
+.title{font-size:22px;letter-spacing:.005em;color:#f0fbfa;text-shadow:0 2px 12px #12b0c233}
+.title100{display:inline-block;color:#071e27;background:linear-gradient(130deg,#62f3cd,#c8f6cb);border-radius:6px;padding:0px 6px;transform:translateY(-1px);font-size:12px;letter-spacing:.02em}
+.subtitle{color:#8aafb8;font-size:10px}.smallcaps{color:#88a7b2;text-transform:uppercase}.budget{color:#6be8cf;font-size:23px}.budget small{color:#87b4b8}.budget.over{color:#ff9f86}
+.progress{background:#102d39d6;border:1px solid #315060;border-radius:9px;color:#b7d2d5;margin-top:11px;padding:8px 10px;box-shadow:0 10px 20px #02111d30}.progress b{color:#68f0ce}.liveDot,.pulse{display:inline-block;width:7px;height:7px;background:#67f2cd;border-radius:50%;box-shadow:0 0 0 3px #59eeca27,0 0 12px #6ff8cf;flex-shrink:0}
+#hint{top:calc(env(safe-area-inset-top) + 136px);background:#0d3039ee;border:1px solid #32706e;color:#d4fef5;box-shadow:0 12px 30px #03131c85;max-width:90%;white-space:normal;line-height:1.35;min-width:160px}
+.actionside{top:calc(env(safe-area-inset-top) + 180px);left:12px;gap:6px}.micro{border:1px solid #3d6570;background:#0e2e3cdb;color:#bddadf;box-shadow:0 5px 16px #03111d60;border-radius:11px;font-size:10px;min-width:79px;text-align:left}.micro:active{background:#235360}
+.bottom{padding:27px 13px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(0deg,#071c2afa 0%,#0a2434fa 77%,#0b253400 100%)}
+.palette-label{color:#9bc4c9;font-size:9px;letter-spacing:.09em}.palette-label b{color:#75e9cb;font-size:10px}
+.equip{background:#173443ee;color:#f1faff;border:1px solid #426473;box-shadow:0 4px 18px #03141b65;border-radius:13px;min-height:75px;overflow:hidden}.equip b{font-size:11px}.equip small{color:#9ac0c2}.equip .symbol{font-size:22px}.equip.selected{border-color:#69ffdb;box-shadow:0 0 0 1px #55e3c9,0 0 28px #19beac55;background:#20555c}.equip.used{opacity:.5}.equip .submark{background:#a5d9ca;color:#183d3c}
+.controls{gap:7px}.mutedBtn{background:#142f3b;border:1px solid #355966;color:#c0dcde;border-radius:13px}.go{background:linear-gradient(115deg,#37d9b5,#76e6c1);color:#062c34;box-shadow:0 9px 28px #08d6a344;font-weight:950;font-size:14px}.fine{color:#76999c}
+.legend{bottom:calc(env(safe-area-inset-bottom) + 192px);background:#092b38e8;border:1px solid #375c69;color:#bad1cf;box-shadow:0 8px 24px #03131f60}.grad{height:7px;background:linear-gradient(90deg,#2b487c,#376db2,#31b9bd,#efcf70,#fa885b)}
+.siteinfo{bottom:calc(env(safe-area-inset-bottom) + 206px);background:#092833f6;border:1px solid #2e7f7b;color:#edf9f7;box-shadow:0 12px 30px #021019aa}.siteinfo p{color:#9dbdc2}.siteinfo button{background:#233c44;border-color:#476372;color:#ffd1b7}
+#toast{background:#59e0c8;color:#052833;font-weight:900;box-shadow:0 15px 30px #0009}
+.overlay{background:#06131bcc;backdrop-filter:blur(11px)}
+.panel{background:linear-gradient(155deg,#153745,#0a2231 75%);border:1px solid #39606b;color:#ecf8f8;box-shadow:0 25px 85px #000b}.panel p{color:#b0c9cc}.bigScore{color:#6ef4c9;text-shadow:0 0 30px #28deb04b}.sstat{background:#1a3b46}.sstat span{color:#a4bfbe}.districts{border-color:#3b5d65}.dline{border-color:#2c515b}.dline.good{background:#1a403e}.dline.bad{background:#573c3a}.dline .diagnosis{color:#f7b5a1}.panelBtns button{background:#53dbbf;color:#08323b}.panelBtns button.secondary{background:#274955;color:#c9eced}.rule{color:#bed0d0}.rule b{color:#f4fff6}.rule .em{color:#d6f9eb;background:#285055}.rule hr{border-color:#3b6268}
+.missionStrip{position:absolute;z-index:3;top:calc(env(safe-area-inset-top) + 117px);left:16px;right:16px;display:flex;align-items:center;gap:7px;font-size:9px;color:#72a9b7;font-weight:800;letter-spacing:.06em;pointer-events:none}.missionStrip b{margin-left:auto;color:#9cf4d8;font-size:10px}
+.spotlight{position:absolute;z-index:6;left:13px;right:13px;bottom:calc(env(safe-area-inset-bottom) + 210px);padding:12px 37px 12px 12px;border:1px solid #397c7c;border-radius:13px;background:#092b38f5;box-shadow:0 8px 23px #0006;display:none;font-size:11px;color:#d0e7e7;line-height:1.5}.spotlight.active{display:block}.spotTitle{font-size:9px;color:#72ddc9;font-weight:900;letter-spacing:.15em;padding-bottom:4px}.spotlight button{position:absolute;top:8px;right:9px;font-size:21px;background:transparent;border:0;color:#b4d0d1}
+.briefPanel{width:min(100%,440px);max-height:min(94dvh,880px);overflow-y:auto;border:1px solid #365f6b;border-radius:24px;padding:23px 21px 19px;background:linear-gradient(157deg,#153b49 0%,#0b2533 58%,#071a29 100%);box-shadow:0 20px 100px #000e;position:relative;overflow-x:hidden}
+.briefPanel:before{content:'';position:absolute;width:280px;height:280px;border:1px solid #47edc220;border-radius:50%;right:-135px;top:-118px;box-shadow:0 0 0 40px #47edc20a,0 0 0 80px #47edc20a;pointer-events:none}.briefTop{font-weight:800;color:#66e6cd;font-size:9px;letter-spacing:.14em;display:flex;align-items:center;gap:8px}.briefGlyph{font-size:22px}.heroNumber{font-size:65px;font-weight:950;letter-spacing:-.08em;color:#72efc8;line-height:1.1;margin:17px 0 8px}.heroNumber span{font-size:13px;color:#7ba6ab;letter-spacing:0}.briefPanel h1{font-size:27px;font-weight:900;letter-spacing:-.05em;line-height:1.48;margin:2px 0 13px}.briefPanel h1 em{font-style:normal;color:#8ce8dc}.briefLead{color:#aecace;font-size:12px;line-height:1.9;margin:0 0 17px}.briefMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.briefMetrics>div{padding:11px 6px;background:#1b3a46;border:1px solid #315260;border-radius:12px;text-align:center}.briefMetrics strong{display:block;color:#f3fff8;font-size:22px;letter-spacing:-.06em}.briefMetrics strong span{font-size:12px}.briefMetrics div>span{font-size:9px;color:#9dc0c6;font-weight:700}.briefNote{display:flex;gap:7px;flex-direction:column;margin:17px 0 19px;padding:11px 13px;border-left:2px solid #7ceec9;background:#18394755}.briefNote b{color:#86efcc;font-size:12px}.briefNote span{font-size:11px;line-height:1.7;color:#b7d3d5}.launch{display:flex;align-items:center;justify-content:space-between;width:100%;border:none;border-radius:12px;padding:15px 17px;background:linear-gradient(115deg,#44ddba,#89eed2);color:#0a3440;font-size:15px;font-weight:900;box-shadow:0 7px 25px #0cd19e35}.briefSub{text-align:center;color:#729ba6;font-size:10px;margin-top:12px}
+@media(max-height:740px){.missionStrip{top:calc(env(safe-area-inset-top) + 105px)}#hint{top:calc(env(safe-area-inset-top) + 126px)}.actionside{top:calc(env(safe-area-inset-top) + 166px)}.briefPanel{padding:16px}.heroNumber{font-size:49px;margin:9px 0}.briefPanel h1{font-size:23px}.briefLead{font-size:11px}.briefMetrics strong{font-size:19px}.legend{bottom:calc(env(safe-area-inset-bottom) + 172px)}.siteinfo,.spotlight{bottom:calc(env(safe-area-inset-bottom) + 184px)}}
+
+.actionside{left:12px;right:12px;top:calc(env(safe-area-inset-top) + 151px);flex-direction:row;gap:6px;justify-content:space-between}.micro{min-width:0;flex:1;padding:9px 4px;text-align:center;min-height:36px;white-space:nowrap;font-size:9px;letter-spacing:-.03em}
+#hint{top:calc(env(safe-area-inset-top) + 200px);font-size:10px;max-width:80%;padding:7px 12px;line-height:1.35}
+@media(max-height:740px){.actionside{top:calc(env(safe-area-inset-top) + 134px)}#hint{top:calc(env(safe-area-inset-top) + 178px)}}
+.awardLine{background:#234a4b;border:1px solid #3c7c71;border-radius:10px;padding:10px;color:#b6f6d4;font-weight:850;font-size:12px}.secretLine{color:#c7aa6d;font-weight:800;font-size:10px;padding:7px}
+</style></head><body><div id="app"><canvas id="scene" aria-label="街をなぞって視点移動、設備を屋上へドラッグして置く基地局パズル"></canvas>
+<header><div class="top"><div><div class="eyebrow">LEVEL 100  /  THE FINAL NETWORK</div><div class="title">NIGHT NETWORK <span class="title100">100</span></div><div class="subtitle">6地区・1,420人を救え  /  クリア85%</div></div><div class="right"><div class="smallcaps">使用予算</div><div id="budget" class="budget">0 <small>/ 25pt</small></div><div class="smallcaps" id="scoreText">充足率は測定後に発表</div></div></div><div class="progress"><span class="liveDot"></span><span id="workflow">観察 → 設置 → 調整 →</span><b>整備完了で測定</b></div></header>
+<div id="hint">STEP 01  装置を選び、屋上のマーカーへ配置</div>
+<div class="actionside"><button id="help" class="micro" aria-label="遊び方">？ 遊び方</button><button id="camera" class="micro">⌖ 視点</button><button id="clue" class="micro">✧ ヒント</button><button id="heatToggle" class="micro" aria-label="電波表示を切り替える">◉ 受信電力</button><button id="restore" class="micro" aria-label="配置をリセット">↺ リセット</button></div>
+<div class="legend" id="legend"><span id="heatName">受信強度</span><span>弱</span><span class="grad"></span><span>強</span></div><div id="siteinfo" class="siteinfo"><div class="copy"><b id="siteTitle">選択した設備</b><p id="siteDesc">アンテナのリングを回せます</p></div><button id="remove">撤去</button></div><div id="toast" role="status" aria-live="polite"></div>
+<div class="spotlight" id="spotlight"><div class="spotTitle" id="spotTitle">SITE INTELLIGENCE</div><div id="spotContent">屋上マーカーをタップすると、ビルの高さや設置条件を確認できます。</div><button id="spotClose" aria-label="閉じる">×</button></div>
+<div class="missionStrip"><span class="pulse"></span><span>都市通信 / 夜間復旧オペレーション</span><b id="modeLabel">設計モード</b></div>
+<div class="bottom"><div class="palette-label"><span>NETWORK EQUIPMENT / 設置装置</span><b id="inventory">残り 3 設備</b></div><div class="palette">
+<button class="equip" data-unit="low"><span class="symbol">📡</span><b>低周波帯</b><small>5pt</small></button>
+<button class="equip" data-unit="sub"><span class="symbol">▥</span><b>Sub6</b><small>7pt</small></button>
+<button class="equip" data-unit="mm"><span class="symbol">✦</span><b>ミリ波</b><small>6pt</small></button>
+<button class="equip" data-unit="mmu"><span class="submark">強化用</span><span class="symbol">⬡</span><b>MMU</b><small>3pt</small></button>
+</div><div class="controls"><button class="mutedBtn" id="undo">↶ 1手戻す</button><button class="go" id="finish">通信テストを実施 →</button></div><div class="fine">測定するまで正解率は非公開 · 何度でも再設計できる</div></div>
+<div class="overlay hidden" id="result"><div class="panel"><div class="ic" id="medal">📡</div><div class="eyebrow">LEVEL 100 · FIELD REPORT</div><h2 id="resultTitle">整備結果</h2><div class="bigScore" id="resultScore">0%</div><p id="resultCaption">通信可能人数</p><div class="srow"><div class="sstat"><strong id="usersOk">0</strong><span>通信できる人</span></div><div class="sstat"><strong id="usersNo">1,420</strong><span>通信できない人</span></div><div class="sstat"><strong id="costScore">0pt</strong><span>使用予算</span></div></div><div class="districts" id="districts"></div><p id="resultHint">設計を見直して再挑戦しよう。</p><div class="awardLine" id="awardLine">—</div><div class="secretLine" id="secretLine">✦ 隠し勲章</div><div class="panelBtns"><button id="retry">配置を修正</button><button id="inspect" class="secondary">街で結果を見る</button></div><div style="font-size:10px;color:#7e938a;margin-top:10px" id="best">ベスト記録 —</div></div></div>
+<div class="overlay hidden" id="guide"><div class="panel"><div class="ic">🛰️</div><div class="eyebrow">HOW TO PLAY</div><h2>LEVEL 100 ｜ 夜間ネットワーク復旧</h2><div class="rule"><b>目的</b>：6地区1,420人全員を通信可能にする。予算25pt以内。<hr><b>設置</b>：下から設備を屋上 A〜E にドラッグ（設備をタップ→屋上をタップでもOK）。1屋上に1設備。<br><b>向き</b>：設置した基地局をタップし、リングを指で回す。Fは既存Sub6局で、向きだけ変えられる。<br><b>MMU</b>：Sub6を設置した後にMMUを選び、そのSub6局をタップすると容量を増強。<hr><b>判定</b>：「整備完了」を押すと通信充足率と地区ごとの診断を表示。通信条件は <span class="em">受信電力・干渉・容量</span> の3要素。<br><b>視点</b>：空いている場所を1本指でなぞると回転。2本指でズーム・移動。<hr>これはゲーム性検証用の簡略電波モデル。現実のエリア設計結果ではありません。</div><div class="panelBtns"><button id="closeGuide">ゲームに戻る</button></div></div></div>
+<div class="overlay" id="brief"><div class="briefPanel"><div class="briefTop"><span class="briefGlyph">◈</span><span>FINAL ASSIGNMENT · OPERATION 100</span></div>
+<div class="heroNumber">100<span> / 100</span></div><h1>電波は、<br><em>届けばいい</em>わけじゃない。</h1>
+<p class="briefLead">深夜の再開発地区。6つのエリアで通信障害が発生。<br>限られた設備と予算を使って、街のネットワークを立て直せ。</p>
+<div class="briefMetrics"><div><strong>1,420</strong><span>通信需要 / 人</span></div><div><strong>25<span>pt</span></strong><span>使える予算</span></div><div><strong>100%</strong><span>完全復旧目標</span></div></div>
+<div class="briefNote"><b>このミッションの鍵</b><span>遠距離の電波・大人数を支える容量・建物の影・同じ周波数帯の干渉。強く飛ばすだけでは解けない。</span></div>
+<button id="launch" class="launch">ミッションを開始 <span>→</span></button><div class="briefSub">タップ・ドラッグで操作 / 通信充足率は判定後に公開</div></div></div>
+</div><script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),app=$('#app'),canvas=$('#scene'),ctx=canvas.getContext('2d',{alpha:false});
+if(!ctx){alert('このブラウザでは表示できません');return;}
+const TAU=Math.PI*2,RAD=Math.PI/180,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),norm=v=>Math.atan2(Math.sin(v),Math.cos(v));
+const lerp=(a,b,t)=>a+(b-a)*t, money={low:5,sub:7,mm:6,mmu:3},caps={low:330,sub:410,mm:480,existing:180},total=1420;
+const districts=[
+ {id:'res',name:'住宅街',n:210,x:-4.25,z:-2.25},
+ {id:'alley',name:'路地',n:90,x:-1.9,z:-1.15},
+ {id:'station',name:'駅前',n:360,x:-.30,z:1.40},
+ {id:'office',name:'オフィス',n:240,x:2.15,z:-1.85},
+ {id:'event',name:'イベント',n:400,x:3.3,z:3.6},
+ {id:'water',name:'水辺',n:120,x:5.22,z:-.1}
+];
+const sites=[
+ {id:'A',x:-3.40,z:-.40,h:2.05,cost:1,desc:'住宅街寄りの中層ビル'},
+ {id:'B',x:-1.00,z:-2.00,h:2.9,cost:1,desc:'駅前とオフィスの間'},
+ {id:'C',x:3.4,z:2.52,h:1.85,cost:0,desc:'イベント施設の隣'},
+ {id:'D',x:-.75,z:-3.70,h:5.3,cost:6,desc:'高くて設置費も高額'},
+ {id:'E',x:2.27,z:1.00,h:2.6,cost:0,desc:'安価な商業ビル'},
+ {id:'G',x:-4.70,z:1.50,h:2.80,cost:1,desc:'景観協議で設置不可の屋上',ng:true},
+ {id:'F',x:4.65,z:-2.25,h:2.95,cost:0,desc:'方向変更可能な既設Sub6局',fixed:true}
+];
+const byId=id=>sites.find(s=>s.id===id);
+// All building heights are arbitrary stage-local units. Geometry is intentionally miniature, not geographic mapping.
+const buildings=[
+ {x:-4.65,z:-4.35,w:1.35,d:1.35,h:1.65,c:'#bbc8b8'},
+ {x:-2.60,z:-4.35,w:1.42,d:1.33,h:1.75,c:'#c7bcb3'},
+ {x:-.75,z:-3.70,w:1.40,d:1.43,h:5.30,c:'#91a7aa',site:'D'},
+ {x:1.45,z:-4.40,w:1.35,d:1.45,h:2.80,c:'#b8c9c9'},
+ {x:4.65,z:-2.25,w:1.38,d:1.46,h:2.95,c:'#88a5ac',site:'F'},
+ {x:-3.40,z:-.40,w:1.55,d:1.50,h:2.05,c:'#b4c1b0',site:'A'},
+ {x:-2.6,z:-2.0,w:1.1,d:1.25,h:1.35,c:'#c8bdb3'},
+ {x:-1.00,z:-2.00,w:1.40,d:1.25,h:2.90,c:'#92a8b0',site:'B'},
+ {x:2.65,z:-1.45,w:1.00,d:1.10,h:1.9,c:'#b0bebb'},
+ {x:-4.70,z:1.50,w:1.30,d:1.43,h:2.80,c:'#bcc7b7',site:'G'},
+ {x:-2.70,z:1.55,w:1.55,d:1.40,h:2.30,c:'#c7b4a6'},
+ {x:-.05,z:3.40,w:1.42,d:1.42,h:1.55,c:'#adbac2'},
+ {x:2.27,z:1.00,w:1.50,d:1.40,h:2.6,c:'#c6c0ae',site:'E'},
+ {x:3.40,z:2.52,w:1.40,d:1.35,h:1.85,c:'#b2c6b3',site:'C'},
+ {x:-4.35,z:4.03,w:1.35,d:1.35,h:1.45,c:'#c2c8b7'},
+ {x:-2.35,z:4.10,w:1.48,d:1.36,h:1.75,c:'#bec7cf'},
+ {x:.3,z:5.05,w:1.32,d:1.25,h:1.65,c:'#c6bdb2'},
+ {x:4.65,z:4.95,w:1.10,d:1.30,h:1.70,c:'#b4c3bb'}
+];
+const trees=[[-5.3,-4.8],[-3.6,-4.8],[-4.95,.1],[-5.1,3],[-3.35,3.1],[-.15,-3.2],[1.90,-3.4],[4.8,.55],[5.1,3.05],[2.25,4.8]];
+let units={low:null,sub:null,mm:null,existing:{site:'F',heading:150*RAD,mmu:false}};
+let selectedKey=null,pending=null,history=[],revealed=false,inspect=false,hasOpened=false,showHeat=true,viewLayer='signal',ngKnown=false,hintIndex=0;
+let inspectedSite=null,lastResult=null;
+let yaw=-.48,tilt=49*RAD,scale=27,panX=0,panY=0,W=390,H=800,DPR=1,needDraw=true;
+const home={yaw:-.48,tilt:49*RAD,scale:27};let tick=0;
+const easeHeading=[0,1,2];
+function cost(){return ['low','sub','mm'].reduce((sum,k)=>sum+(units[k]?money[k]+byId(units[k].site).cost+(units[k].mmu?money.mmu:0):0),0)}
+function save(){history.push(JSON.stringify(units));if(history.length>35)history.shift()}
+function toast(t){const el=$('#toast');el.textContent=t;el.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display='none',2400)}
+function band(k){return k==='low'?'low':k==='mm'?'mm':'sub'}
+function capFor(k){return k==='sub'&&units.sub?.mmu?650:caps[k]}
+function getSignal(k,u,d,heat=false){
+ const st=byId(u.site),dx=d.x-st.x,dz=d.z-st.z,dist=Math.hypot(dx,dz),angle=norm(Math.atan2(dz,dx)-u.heading);
+ const width=k==='mm'?.48:k==='low'?1.35:1.12;
+ const loss=Math.min(56,16*(angle/width)**2);
+ // Intentional calibrated gameplay approximation of frequency-dependent link budget.
+ const basePower=k==='low'?-43:k==='mm'?-38:-40;
+ const pl=(k==='low'?20:k==='mm'?30:24)*Math.log10(1+dist*(k==='mm'?1.9:1.4));
+ let block=0;
+ // Rooftops obstruct only when an intermediate building intersects the ray and projects above the ray line.
+ // The obstruction cap preserves readable puzzle mechanics on a compact mobile map.
+ for(const b of buildings){
+  if(b.site===u.site)continue;
+  const ex=b.x-st.x,ez=b.z-st.z,t=(ex*dx+ez*dz)/(dist*dist||1);
+  if(t<.13||t>.88)continue;
+  const nearestX=st.x+t*dx,nearestZ=st.z+t*dz;
+  const radius=Math.max(b.w,b.d)*.39;
+  if(Math.hypot(nearestX-b.x,nearestZ-b.z)>radius)continue;
+  const beamHeight=st.h+0.7*(1-t)-.15*t;
+  if(b.h>beamHeight+.2){block=Math.max(block,k==='low'?4.5:k==='mm'?17:10)}
+ }
+ // Coverage parameters tuned to permit broad, finger-reachable aiming solutions.
+ return basePower-pl-loss-block;
+}
+function linkQuality(k,u,d,active){
+ const sig=getSignal(k,u,d),threshold=k==='low'?-76:k==='mm'?-67:-70;
+ if(sig<threshold)return {ok:false,reason:'電波不足',sig};
+ if(k==='low'||k==='mm')return {ok:true,reason:'',sig};
+ // Interference only between sub-6 transmitters; same-band downlink.
+ const others=active.filter(a=>a.key!==k&&band(a.key)==='sub');
+ const interf=others.reduce((sum,a)=>sum+Math.pow(10,getSignal(a.key,a.u,d)/10),Math.pow(10,-82/10));
+ const sinr=sig-10*Math.log10(interf);
+ return {ok:sinr>=7,reason:sinr<7?'干渉':'',sig,sinr};
+}
+function maxFlow(links,active){
+ // Min-cut / max-flow: district population -> viable stations -> each station's capacity.
+ const n=districts.length,k=active.length,S=n+k,T=S+1,N=T+1;
+ const graph=Array.from({length:N},()=>[]);
+ function edge(a,b,c){let aa={to:b,cap:c,rev:graph[b].length},bb={to:a,cap:0,rev:graph[a].length};graph[a].push(aa);graph[b].push(bb)}
+ districts.forEach((d,i)=>{edge(S,i,d.n);active.forEach((u,j)=>{if(links[i][j].ok)edge(i,n+j,d.n)})});
+ active.forEach((u,j)=>edge(n+j,T,capFor(u.key)));
+ let flow=0;
+ while(true){let pred=Array(N).fill(null),queue=[S];pred[S]={};for(let qi=0;qi<queue.length&&!pred[T];qi++){
+  const v=queue[qi];for(const e of graph[v])if(e.cap>0&&!pred[e.to]){pred[e.to]={from:v,edge:e};queue.push(e.to)}
+ }if(!pred[T])break;
+ let pushed=Infinity;for(let v=T;v!==S;v=pred[v].from)pushed=Math.min(pushed,pred[v].edge.cap);
+ for(let v=T;v!==S;v=pred[v].from){let e=pred[v].edge;e.cap-=pushed;graph[v][e.rev].cap+=pushed}flow+=pushed;
+ }
+ const served=districts.map((d,i)=>graph[S].find(e=>e.to===i)?d.n-graph[S].find(e=>e.to===i).cap:0);
+ return {flow,served};
+}
+function evaluate(){
+ const active=Object.entries(units).filter(([k,u])=>u).map(([key,u])=>({key,u}));
+ const links=districts.map(d=>active.map(a=>linkQuality(a.key,a.u,d,active)));
+ const {flow,served}=maxFlow(links,active);
+ const rows=districts.map((d,i)=>{
+  const viable=links[i].map((l,j)=>({l,key:active[j].key})).filter(a=>a.l.ok);
+  let reason='';if(served[i]<d.n){if(viable.length)reason='容量不足';else if(links[i].some(a=>a.reason==='干渉'))reason='干渉';else reason='電波不足'}
+  return {...d,served:served[i],reason};
+ });
+ return {flow,score:Math.round(1000*flow/total)/10,rows,active};
+}
+const shade=(hex,delta)=>{const n=parseInt(hex.slice(1),16);return '#'+[n>>16&255,n>>8&255,n&255].map(x=>Math.round(clamp(x+delta,0,255)).toString(16).padStart(2,'0')).join('')};
+function p(x,z,y=0){let c=Math.cos(yaw),s=Math.sin(yaw);return {x:W*.5+panX+(x*c-z*s)*scale,y:H*.505+panY+(x*s+z*c)*Math.sin(tilt)*scale-y*Math.cos(tilt)*scale}}
+function polygon(pts,fill,stroke,width=1){ctx.beginPath();pts.forEach((v,i)=>i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke()}}
+function rect3(x1,z1,x2,z2,y,fill){polygon([p(x1,z1,y),p(x2,z1,y),p(x2,z2,y),p(x1,z2,y)],fill)}
+function line3(x1,z1,y1,x2,z2,y2,col,w=1){let a=p(x1,z1,y1),b=p(x2,z2,y2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=w;ctx.strokeStyle=col;ctx.stroke()}
+function circle(x,y,r,fill,stroke,w=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.stroke()}}
+function font(txt,x,y,size=12,col='#264a49',weight=800){ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=col;ctx.fillText(txt,x,y)}
+function rounded(x,y,w,h,r,color,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(color){ctx.fillStyle=color;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
+function drawGround(){
+ const q=[p(-6,-5.85),p(6,-5.85),p(6,5.85),p(-6,5.85)],r=q.map(v=>({x:v.x,y:v.y+19}));
+ polygon([q[2],q[3],r[3],r[2]],'#0a2637','#184456');polygon([q[1],q[2],r[2],r[1]],'#103b49');polygon(q,'#133643','#315967',1.5);
+ // A soft waterline and botanical plaza create legible neighborhood landmarks.
+ rect3(1.1,2.45,5.75,5.72,.01,'#13515c');rect3(-5.8,-3.5,-3.25,-1.0,.01,'#214642');
+ for(let x=1.25;x<5.7;x+=.30){line3(x,2.65,.02,x+.2,5.5,.02,'#43d3d61b',.65)}
+ for(const x of [-3.2,-1.75,1.55,4.0]){rect3(x-.25,-5.85,x+.25,5.85,.03,'#1f4150');rect3(x-.16,-5.85,x+.16,5.85,.04,'#234655');for(let z=-5.2;z<5.5;z+=1.0)rect3(x-.016,z,x+.016,z+.38,.05,'#8cbcc044')}
+ for(const z of [-3.0,.70,3.12]){rect3(-6,z-.25,6,z+.25,.04,'#1c4050');rect3(-6,z-.17,6,z+.17,.05,'#21485a');for(let x=-5.5;x<5.4;x+=.95)rect3(x,z-.016,x+.37,z+.016,.06,'#9ec3c02b')}
+ // Railway beside station entrance.
+ for(let x=-1.55;x<1.35;x+=.20)rect3(x,4.92,x+.08,5.09,.065,'#7c9aaa31');
+ line3(-1.6,4.92,.07,1.3,4.92,.07,'#8ac3bf55',1.5);line3(-1.6,5.08,.07,1.3,5.08,.07,'#8ac3bf55',1.5);
+}
+function heatColor(s){const t=clamp((s+104)/54,0,1);let r,g,b;if(t<.5){let w=t/.5;r=lerp(30,49,w);g=lerp(68,171,w);b=lerp(116,207,w)}else{let w=(t-.5)/.5;r=lerp(49,250,w);g=lerp(171,184,w);b=lerp(207,82,w)}return `rgba(${r|0},${g|0},${b|0},.54)`}
+function drawHeat(){if(!showHeat)return;let active=Object.entries(units).filter(([k,u])=>u);if(!active.length)return;
+ let inc=.40;for(let x=-5.75;x<5.75;x+=inc)for(let z=-5.55;z<5.56;z+=inc){const d={x:x+inc*.5,z:z+inc*.5};let color;
+ if(viewLayer==='interference'){
+   const subs=active.filter(([k])=>k==='sub'||k==='existing');
+   if(subs.length<2)continue;
+   const signals=subs.map(([k,u])=>getSignal(k,u,d)).sort((a,b)=>b-a);
+   const diff=signals[0]-signals[1],strong=signals[1]>-76;
+   const a=strong?clamp((20-diff)/21,0,.82):0;
+   color=`rgba(255,91,105,${a.toFixed(3)})`;
+ }else{let s=Math.max(...active.map(([k,u])=>getSignal(k,u,d,true)));color=heatColor(s)}
+ rect3(x,z,x+inc+.012,z+inc+.012,.075,color)
+ }}
+function building(b){let {x,z,w,d,h}=b,xa=x-w/2,xb=x+w/2,za=z-d/2,zb=z+d/2;let corners=[[xa,za],[xb,za],[xb,zb],[xa,zb]],low=corners.map(v=>p(v[0],v[1],.07)),roof=corners.map(v=>p(v[0],v[1],h));
+ polygon([p(xa+.18,za+.17,.02),p(xb+.30,za+.17,.02),p(xb+.30,zb+.30,.02),p(xa+.18,zb+.30,.02)],'#00131e4d');
+ const palette=['#23445a','#27485b','#2f515e','#2b455c','#345360'];let base=palette[buildings.indexOf(b)%palette.length];
+ let sides=[];for(let i=0;i<4;i++){let j=(i+1)%4,mx=(corners[i][0]+corners[j][0])/2,mz=(corners[i][1]+corners[j][1])/2;sides.push({i,j,depth:mx*Math.sin(yaw)+mz*Math.cos(yaw)})}sides.sort((a,b)=>a.depth-b.depth);
+ for(const s of sides){polygon([low[s.i],low[s.j],roof[s.j],roof[s.i]],shade(base,s.i%2===0?0:-16),'#628a9250');let a=corners[s.i],bb=corners[s.j];
+  for(let y=.52;y<h-.15;y+=.62)for(let f=.14;f<.88;f+=.27){let x0=lerp(a[0],bb[0],f),z0=lerp(a[1],bb[1],f),x1=lerp(a[0],bb[0],f+.12),z1=lerp(a[1],bb[1],f+.12);const lit=((Math.round(y*13)+Math.round(f*107)+buildings.indexOf(b)*11)%5<3);polygon([p(x0,z0,y),p(x1,z1,y),p(x1,z1,y+.23),p(x0,z0,y+.23)],lit?'#ffd69e7c':'#76c8d232')}}
+ polygon(roof,shade(base,21),'#a6d0d47a',1.15);
+ for(let i=0;i<4;i++)line3(corners[i][0],corners[i][1],h+.04,corners[(i+1)%4][0],corners[(i+1)%4][1],h+.04,'#94bdc36a',1);
+ let sh=p(x-.17,z-.13,h+.04);rounded(sh.x-4,sh.y-2,9,5,1,'#70969a');
+ if(b.site){const s=byId(b.site),q=p(s.x,s.z,s.h+.16);circle(q.x,q.y,scale*.38,'#53dad315')}
+}
+function drawTrees(){for(let i=0;i<trees.length;i++){let [x,z]=trees[i],pt=p(x,z,.60);line3(x,z,.05,x,z,.5,'#857c68',Math.max(1,scale*.04));circle(pt.x+2,pt.y+2,scale*.20,'#719b753a');circle(pt.x,pt.y,scale*.21,['#9ebf9a','#b6caa3','#88b4a7'][i%3]);circle(pt.x-scale*.04,pt.y-scale*.06,scale*.075,'#ffffff28')}}
+function stationPos(site){let s=byId(site);return p(s.x,s.z,s.h+.72)}
+const unitColor={low:'#3682a7',sub:'#655fb6',mm:'#c97839',existing:'#368b79'};
+function drawSites(){for(const s of sites){let pt=p(s.x,s.z,s.h+.35),isOccupied=Object.values(units).some(u=>u?.site===s.id),fixed=s.fixed;
+  if(pending&&!fixed)circle(pt.x,pt.y,27,'#4ff5cb17','#69f2ce80',2);
+  if(!isOccupied){const off=s.ng&&ngKnown;circle(pt.x,pt.y,15,off?'#223d48ed':'#092d3cf2',off?'#8c9da0':'#66dddf',2.2);font(off?'×':s.id,pt.x,pt.y,12,off?'#95a2a3':'#bdffef',850);if(pending&&!off)circle(pt.x,pt.y,22,null,'#85ffcf70',1)}
+  else{let entry=Object.entries(units).find(([k,u])=>u?.site===s.id);if(!entry)continue;let [k,u]=entry;let c=unitColor[k];
+   let top=stationPos(s.id);line3(s.x,s.z,s.h+.1,s.x,s.z,s.h+.72,'#c5ffff',Math.max(2,scale*.10));line3(s.x,s.z,s.h+.1,s.x,s.z,s.h+.72,c,Math.max(1,scale*.05));
+   let tip=p(s.x+Math.cos(u.heading)*.42,s.z+Math.sin(u.heading)*.42,s.h+.65);line3(s.x,s.z,s.h+.64,s.x+Math.cos(u.heading)*.42,s.z+Math.sin(u.heading)*.42,s.h+.65,c,4);circle(tip.x,tip.y,5,'#d8ffff',c,2);circle(top.x,top.y,9,c,'#efffff',2.2);circle(top.x,top.y,16,null,c+'66',1.5);
+   rounded(pt.x-15,pt.y-32,30,18,9,'#071c2bee','#60a8af');font(s.id,pt.x,pt.y-23,11,'#c5fff5',900);
+   if(u.mmu){rounded(pt.x+12,pt.y-29,33,14,7,'#c6b9ff');font('MMU',pt.x+28,pt.y-22,9,'#342b70',850)}
+   if(selectedKey===k)drawRing(top,u,c);
+  }
+ }}
+function drawRing(pos,u,col){const R=52;circle(pos.x,pos.y,R,'#ffffff12','#ffffffd8',7);circle(pos.x,pos.y,R,null,col+'9a',1.5);
+ for(let j=0;j<12;j++){let a=j*TAU/12;line2(pos.x+Math.cos(a)*(R-7),pos.y+Math.sin(a)*(R-7),pos.x+Math.cos(a)*(R-2),pos.y+Math.sin(a)*(R-2),col+'99',1)}
+ const theta=u.heading+yaw,tx=pos.x+R*Math.cos(theta),ty=pos.y+R*Math.sin(theta);line2(pos.x,pos.y,tx,ty,col+'bb',2);circle(tx,ty,13,'#ffffff',col,3);circle(tx,ty,4,col)}
+function line2(x,y,x2,y2,col,w){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.strokeStyle=col;ctx.lineWidth=w;ctx.stroke()}
+function drawDistricts(){const e=inspect?lastResult||evaluate():null;
+ for(const d of districts){let a=p(d.x,d.z,.22),record=e?.rows.find(r=>r.id===d.id);let status=record?(record.served===d.n?'#6ae8b8':record.served>0?'#efbd6d':'#ff8390'):'#8de8e2';
+  circle(a.x,a.y,11,status+'20');circle(a.x,a.y,7.5,'#092d3c','#d4f6ed',1.5);circle(a.x,a.y,4.2,status);
+  const t=`${d.name}  ${d.n}人`,ww=Math.max(80,t.length*9+13),yy=clamp(a.y-34,146,H-200),xx=clamp(a.x-ww/2,5,W-ww-5);
+  rounded(xx,yy,ww,22,9,'#0b2938f2','#42747c');font(t,xx+ww/2,yy+11,10,'#e4f6f3',780);
+ }}
+function drawCompass(){let cy=H*.7;if(cy>150&&cy<H-180){circle(25,cy,15,'#ffffffb0','#4f827326');let a=yaw-Math.PI/2;line2(25,cy,25+Math.cos(a)*10,cy+Math.sin(a)*10,'#278f8d',2.5);font('N',25,cy+23,9,'#65807a')}}
+function render(){let bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#071827');bg.addColorStop(.56,'#103342');bg.addColorStop(1,'#061421');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ let halo=ctx.createRadialGradient(W*.57,H*.49,10,W*.57,H*.49,W*.83);halo.addColorStop(0,'#29877720');halo.addColorStop(1,'#05162300');ctx.fillStyle=halo;ctx.fillRect(0,0,W,H);
+ drawGround();drawHeat();
+ let objects=buildings.map((b,i)=>({kind:0,b,depth:b.x*Math.sin(yaw)+b.z*Math.cos(yaw)}));trees.forEach((a,i)=>objects.push({kind:1,i,depth:a[0]*Math.sin(yaw)+a[1]*Math.cos(yaw)}));objects.sort((a,b)=>a.depth-b.depth);
+ for(const o of objects){if(o.kind===0)building(o.b);else{let [x,z]=trees[o.i],pt=p(x,z,.6);line3(x,z,.04,x,z,.54,'#768f7a',1.6);circle(pt.x,pt.y,scale*.20,['#3a917d','#599a84','#2b777d'][o.i%3]);circle(pt.x-scale*.03,pt.y-scale*.02,scale*.09,'#83dcad32')}}
+ drawSites();drawDistricts();drawCompass();
+}
+function updateUI(){let spent=cost();$('#budget').innerHTML=`${spent} <small>/ 25pt</small>`;$('#budget').classList.toggle('over',spent>25);$('#finish').disabled=spent>25;
+ for(const btn of document.querySelectorAll('.equip')){let k=btn.dataset.unit;btn.classList.toggle('selected',pending===k);btn.classList.toggle('used',k==='mmu'?!!units.sub?.mmu:!!units[k]);btn.disabled=(k==='mmu'?!units.sub||!!units.sub.mmu:!!units[k]);}
+ $('#inventory').textContent=`残り ${3-['low','sub','mm'].filter(k=>!!units[k]).length} 機`;
+ $('#workflow').textContent=pending?'屋上を選んで設備を置く →':'観察 → 設置 → 調整 →';
+ $('#modeLabel').textContent=inspect?'測定結果表示':viewLayer==='interference'?'干渉観測モード':'設計モード';
+ if(selectedKey&&units[selectedKey]){let u=units[selectedKey],s=byId(u.site);$('#siteinfo').classList.add('visible');$('#siteTitle').textContent=`${s.id}屋上｜${selectedKey==='existing'?'既存Sub6':selectedKey==='low'?'低周波帯':selectedKey==='sub'?'Sub6':'ミリ波'}${u.mmu?' ＋MMU':''}`;$('#siteDesc').textContent=`${s.desc} · リングを回して方位を調整`;
+ $('#remove').hidden=selectedKey==='existing';}else $('#siteinfo').classList.remove('visible');
+ $('#legend').hidden=!showHeat;
+ needDraw=true;
+}
+function doPlacement(key,site){if(site?.ng){ngKnown=true;toast('この屋上は、過去の設置折衝で景観NGでした');needDraw=true;return}if(!site||site.fixed){toast('この屋上には新設できません');return}
+ if(key==='mmu'){if(units.sub?.site===site.id&&!units.sub.mmu){save();units.sub.mmu=true;pending=null;selectedKey='sub';toast('Sub6をMMUで増強しました');updateUI();return}toast('先に設置したSub6局を選んでね');return}
+ if(units[key]){toast('その設備はすでに設置済みです');return}
+ if(Object.values(units).some(u=>u?.site===site.id)){toast('この屋上にはすでに設備があります');return}
+ const used=cost()+money[key]+site.cost;
+ if(used>25){toast('予算オーバー！ 設置場所か設備を見直そう');return}
+ save();let target=districts.find(d=>d.id===(key==='low'?'res':key==='sub'?'station':'event'));
+ units[key]={site:site.id,heading:0,mmu:false};selectedKey=key;pending=null;revealed=false;inspect=false;toast(`${site.id}屋上に設置！ リングで向きを調整しよう`);updateUI();
+}
+function selectKey(key){$('#hint').classList.remove('off');clearTimeout(window.__hintTimer);window.__hintTimer=setTimeout(()=>$('#hint').classList.add('off'),4000);pending=(pending===key?null:key);selectedKey=null;updateUI();$('#hint').textContent=pending==='mmu'?'設置済みのSub6局をタップして増強':pending?`屋上をタップ、またはドラッグで${key==='low'?'低周波帯':key==='sub'?'Sub6':'ミリ波'}を設置`:'屋上と設備を選んで設置';}
+function showSiteIntel(s){inspectedSite=s.id;let body=s.ng?'この場所は景観協議NGです。設置できません。':s.fixed?'既存のSub6基地局。移動・撤去はできませんが、アンテナの向きは変更できます。':`${s.desc}。高さ ${Math.round(s.h*7)}m 相当 ／ 屋上追加費用 ${s.cost}pt。`;
+ $('#spotTitle').textContent=`ROOFTOP ${s.id}  /  SITE INTELLIGENCE`;$('#spotContent').textContent=body;$('#spotlight').classList.add('active')}
+function relocateUnit(key,site){if(key==='existing'){toast('既存局Fは移動できません。方位は変更できます');return}if(site.ng){ngKnown=true;toast('景観協議NG。ここには設置できません');needDraw=true;return}if(site.fixed){toast('既存局の屋上には設置できません');return}if(Object.entries(units).some(([k,u])=>k!==key&&u?.site===site.id)){toast('この屋上には別の装置があります');return}if(units[key].site===site.id)return;let before=cost(),after=before-byId(units[key].site).cost+site.cost;if(after>25){toast('移設すると予算を超えます');return}save();units[key].site=site.id;revealed=false;inspect=false;selectedKey=key;toast(`${site.id}屋上へ移設しました`);updateUI()}
+let pointers=new Map(),drag=null,gesture=null;
+function localXY(e){let b=canvas.getBoundingClientRect();return {x:e.clientX-b.left,y:e.clientY-b.top}}
+function nearestStation(x,y){let found=null,min=Infinity;for(const [k,u] of Object.entries(units)){if(!u)continue;let pt=stationPos(u.site),d=Math.hypot(x-pt.x,y-pt.y);if(d<min&&d<38){min=d;found=k}}return found}
+function nearestSite(x,y){let found=null,min=Infinity;for(const s of sites){let q=p(s.x,s.z,s.h+.30),d=Math.hypot(x-q.x,y-q.y);if(d<min&&d<30){found=s;min=d}}return found}
+function start(e){if(!$('#result').classList.contains('hidden')||!$('#guide').classList.contains('hidden'))return;e.preventDefault();canvas.setPointerCapture(e.pointerId);const xy=localXY(e);pointers.set(e.pointerId,xy);
+ if(pointers.size===2){const [a,b]=[...pointers.values()];gesture={dist:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2,scale,panX,panY};drag=null;return}
+ if(selectedKey&&units[selectedKey]){const q=stationPos(units[selectedKey].site),distance=Math.hypot(xy.x-q.x,xy.y-q.y);if(Math.abs(distance-52)<22){drag={mode:'ring',id:e.pointerId,x:xy.x,y:xy.y,moved:false,key:selectedKey,startAngle:Math.atan2(xy.y-q.y,xy.x-q.x),heading:units[selectedKey].heading};return;}}
+ let k=nearestStation(xy.x,xy.y);if(k){if(pending==='mmu'){if(k==='sub')doPlacement('mmu',byId(units.sub.site));else toast('MMUは新設Sub6局に取り付けます');return;}selectedKey=k;pending=null;const pos=stationPos(units[k].site),dist=Math.hypot(xy.x-pos.x,xy.y-pos.y),onRing=dist>32&&dist<75;
+ drag={mode:onRing?'ring':'pick',id:e.pointerId,x:xy.x,y:xy.y,moved:false,key:k,startAngle:Math.atan2(xy.y-pos.y,xy.x-pos.x),heading:units[k].heading};updateUI();return}
+ let site=nearestSite(xy.x,xy.y);drag={mode:'orbit',id:e.pointerId,x:xy.x,y:xy.y,moved:false,site};}
+function move(e){if(!pointers.has(e.pointerId))return;e.preventDefault();let xy=localXY(e);pointers.set(e.pointerId,xy);
+ if(pointers.size>=2){let [a,b]=[...pointers.values()],dist=Math.hypot(a.x-b.x,a.y-b.y),xx=(a.x+b.x)/2,yy=(a.y+b.y)/2;if(!gesture)gesture={dist,x:xx,y:yy,scale,panX,panY};scale=clamp(gesture.scale*dist/Math.max(1,gesture.dist),14,46);panX=clamp(gesture.panX+xx-gesture.x,-W*.3,W*.3);panY=clamp(gesture.panY+yy-gesture.y,-H*.22,H*.22);needDraw=true;return}
+ if(!drag||drag.id!==e.pointerId)return;
+ let dx=xy.x-drag.x,dy=xy.y-drag.y;if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
+ if(drag.mode==='pick'&&drag.moved){drag.mode='relocate';}
+ if(drag.mode==='ring'){let pos=stationPos(units[drag.key].site);if(Math.hypot(xy.x-pos.x,xy.y-pos.y)>13){if(!drag.saved){save();drag.saved=true;}let a=Math.atan2(xy.y-pos.y,xy.x-pos.x);units[drag.key].heading=norm(drag.heading+norm(a-drag.startAngle));revealed=inspect=false;needDraw=true;drag.mode='ring'}}
+ else if(drag.mode==='relocate'){let site=nearestSite(xy.x,xy.y);drag.overSite=site?.id||null;needDraw=true}
+ else if(drag.mode==='orbit'){yaw=norm(yaw+dx*.007);tilt=clamp(tilt+dy*.0022,29*RAD,65*RAD);drag.x=xy.x;drag.y=xy.y;needDraw=true}}
+function end(e){if(!pointers.has(e.pointerId))return;const xy=localXY(e);pointers.delete(e.pointerId);if(pointers.size<2)gesture=null;
+ if(drag&&drag.id===e.pointerId){if(drag.mode==='orbit'&&!drag.moved){let s=nearestSite(xy.x,xy.y);if(pending&&s)doPlacement(pending,s);else if(s){showSiteIntel(s)}else{selectedKey=null;updateUI()}}
+ else if(drag.mode==='relocate'){let s=nearestSite(xy.x,xy.y);if(s)relocateUnit(drag.key,s);else toast('基地局を移すには別の屋上にドロップしてね')}
+ else if(drag.mode==='pick'&&!drag.moved){if(pending==='mmu'&&drag.key==='sub'){doPlacement('mmu',byId(units.sub.site))}else{selectedKey=drag.key;updateUI()}}
+ drag=null}
+ needDraw=true}
+function setupPalette(){for(const btn of document.querySelectorAll('.equip')){btn.addEventListener('click',()=>{const k=btn.dataset.unit;if(!btn.disabled)selectKey(k)})}
+ // Drag directly from the equipment tray across the scene: a touch-friendly shortcut to placement.
+ let carried=null;
+ document.querySelectorAll('.equip').forEach(btn=>{btn.addEventListener('pointerdown',e=>{if(btn.disabled)return;carried={id:e.pointerId,k:btn.dataset.unit,x:e.clientX,y:e.clientY,moved:false};btn.setPointerCapture(e.pointerId)});
+  btn.addEventListener('pointermove',e=>{if(!carried||e.pointerId!==carried.id)return;if(Math.hypot(e.clientX-carried.x,e.clientY-carried.y)>22)carried.moved=true;if(carried.moved){let xy=localXY(e);let s=nearestSite(xy.x,xy.y);btn.style.filter=s?'drop-shadow(0 0 7px #18a79d)':'none';needDraw=true;}});
+  btn.addEventListener('pointerup',e=>{if(!carried||e.pointerId!==carried.id)return;btn.style.filter='';if(carried.moved){e.preventDefault();let s=nearestSite(localXY(e).x,localXY(e).y);if(s)doPlacement(carried.k,s);else toast('屋上A〜Eにドロップしてね')}carried=null});btn.addEventListener('pointercancel',()=>{carried=null;btn.style.filter=''})})}
+function renderResult(){const r=evaluate(),valid=cost()<=25,score=r.score,won=score>=85&&valid,perfect=score>=99.95&&valid;
+ $('#medal').textContent=perfect?'🏆':won?'🏅':'📡';$('#resultTitle').textContent=perfect?'完全攻略！':won?'整備成功！':'改善の余地あり';$('#resultScore').textContent=score.toFixed(1).replace(/\.0$/,'')+'%';$('#resultCaption').textContent=perfect?'全1,420人が通信可能！':'判定結果を見て配置・方位を見直そう';lastResult=r;$('#usersOk').textContent=r.flow.toLocaleString('ja-JP');$('#usersNo').textContent=(total-r.flow).toLocaleString('ja-JP');$('#costScore').textContent=cost()+'pt';
+ $('#districts').innerHTML=r.rows.map(d=>`<div class="dline ${d.served===d.n?'good':'bad'}"><span class="dname">${d.name}</span><span class="diagnosis">${d.reason||'通信OK'}</span><span class="dcount">${d.served}/${d.n}人</span></div>`).join('');
+ const issues=r.rows.filter(d=>d.served<d.n);$('#resultHint').textContent=!issues.length?'素晴らしい！ 他の配置でも100%に挑める。':issues.some(d=>d.reason==='干渉')?'受信電力だけでなく、同じSub6帯の干渉にも注目。既存局Fの方位を確認してみよう。':issues.some(d=>d.reason==='容量不足')?'届いていても通信容量が足りない地区がある。周波数の役割分担やMMUを考えよう。':'電波が届かない地区がある。建物の高さ・距離・アンテナ方向を見直そう。';
+ let best={score:0,cost:Infinity};try{best=JSON.parse(localStorage.getItem('bs-max-prototype-v03-best')||'null')||best}catch(e){}
+ if(valid&&(score>best.score||(score===best.score&&cost()<best.cost))){best={score,cost:cost()};try{localStorage.setItem('bs-max-prototype-v03-best',JSON.stringify(best))}catch(e){}}
+ $('#best').textContent=`🏅 BEST ${best.score.toFixed(1).replace(/\.0$/,'')}% ／ 完全攻略時の最少使用予算 ${best.score>=100?best.cost+'pt':'—'}`;
+ const medal=perfect?(cost()<=22?'🥇 ゴールド／低予算100%':cost()<=23?'🥈 省コストマスター':'🥉 完全復旧'):won?'✓ 復旧完了':'— 要改善';
+ let tagline=document.getElementById('awardLine');if(tagline)tagline.textContent=medal;
+ const hidden=document.getElementById('secretLine');if(hidden)hidden.textContent=perfect&&Math.abs(units.existing.heading-150*RAD)>.5?'✧ 隠し勲章：既存局を活かす者':'✦ 隠し勲章は完全復旧時に解放';
+ revealed=true;inspect=false;$('#result').classList.remove('hidden');needDraw=true;
+}
+function resize(){let r=app.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(2,devicePixelRatio||1);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);scale=clamp(home.scale*W/390,20,34);needDraw=true}
+function raf(){if(needDraw){ctx.setTransform(DPR,0,0,DPR,0,0);render();needDraw=false}requestAnimationFrame(raf)}
+canvas.addEventListener('pointerdown',start,{passive:false});canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
+canvas.addEventListener('wheel',e=>{e.preventDefault();scale=clamp(scale*(e.deltaY<0?1.1:.90),15,45);needDraw=true},{passive:false});
+$('#camera').addEventListener('click',()=>{yaw=home.yaw;tilt=home.tilt;panX=panY=0;scale=clamp(home.scale*W/390,20,34);needDraw=true});
+$('#heatToggle').addEventListener('click',()=>{if(!showHeat){showHeat=true;viewLayer='signal'}else if(viewLayer==='signal'){viewLayer='interference'}else{showHeat=false;viewLayer='signal'}$('#heatToggle').textContent=!showHeat?'◯ 表示OFF':viewLayer==='interference'?'⚡ 干渉':'◉ 受信電力';$('#heatName').textContent=viewLayer==='interference'?'Sub6干渉':'受信強度';$('#legend .grad').style.background=viewLayer==='interference'?'linear-gradient(90deg,#193f50,#fb667c)':'linear-gradient(90deg,#2b487c,#376db2,#31b9bd,#efcf70,#fa885b)';updateUI()});
+$('#help').addEventListener('click',()=>$('#guide').classList.remove('hidden'));$('#closeGuide').addEventListener('click',()=>$('#guide').classList.add('hidden'));
+$('#restore').addEventListener('click',()=>{if(!confirm('設置をすべて初期状態へ戻しますか？'))return;save();units={low:null,sub:null,mm:null,existing:{site:'F',heading:150*RAD,mmu:false}};pending=null;selectedKey=null;revealed=inspect=false;$('#spotlight').classList.remove('active');lastResult=null;updateUI()});
+$('#undo').addEventListener('click',()=>{if(!history.length){toast('戻せる操作はありません');return}units=JSON.parse(history.pop());selectedKey=null;pending=null;revealed=inspect=false;updateUI()});
+$('#remove').addEventListener('click',()=>{if(!selectedKey||selectedKey==='existing')return;save();units[selectedKey]=null;selectedKey=null;revealed=inspect=false;updateUI()});
+$('#finish').addEventListener('click',()=>{if(cost()>25){toast('予算25pt以内に収めてね');return}renderResult()});
+$('#retry').addEventListener('click',()=>{$('#result').classList.add('hidden');revealed=inspect=false;needDraw=true});
+$('#inspect').addEventListener('click',()=>{$('#result').classList.add('hidden');inspect=true;selectedKey=null;needDraw=true;toast('結果表示中：色付きの点が地区の通信可否です')});
+$('#launch').addEventListener('click',()=>{$('#brief').classList.add('hidden');clearTimeout(window.__hintTimer);window.__hintTimer=setTimeout(()=>$('#hint').classList.add('off'),5200);toast('屋上候補 A〜E と既存局Fを確認しよう');needDraw=true});
+$('#spotClose').addEventListener('click',()=>$('#spotlight').classList.remove('active'));
+$('#clue').addEventListener('click',()=>{const clues=['まずは、住宅街と路地を支える低周波帯の役割を考えよう。','イベント会場の400人には、ミリ波の容量が役立つかもしれない。','電波が届いていても失敗するなら、既存局FのSub6干渉を疑ってみよう。','MMUは新設Sub6の容量を増やす。Sub6を先に設置してから追加しよう。'];toast(`ヒント ${hintIndex+1}/4：${clues[hintIndex]}`);hintIndex=(hintIndex+1)%clues.length});
+window.addEventListener('resize',resize);resize();setupPalette();updateUI();requestAnimationFrame(raf);
+// Exposed for repeatable automated stage validation only.
+window.__expert={get units(){return structuredClone(units)},get result(){return evaluate()},get cost(){return cost()},set:(key,site,deg,mmu=false)=>{if(!site){units[key]=null}else{units[key]={site,heading:deg*RAD,mmu};}updateUI();return evaluate()},heading:(key,deg)=>{units[key].heading=deg*RAD;updateUI();return evaluate()},clear:()=>{units.low=units.sub=units.mm=null;updateUI();return evaluate()},get sites(){return sites},get districts(){return districts},pointAntenna:(id)=>{let s=byId(id);return p(s.x,s.z,s.h+.72)},point:(id)=>{let s=byId(id);return p(s.x,s.z,s.h+.3)},getSignal,linkQuality, get active(){return Object.entries(units).filter(([k,u])=>u).map(([key,u])=>({key,u}))}};
+})();
+</script></body></html>
