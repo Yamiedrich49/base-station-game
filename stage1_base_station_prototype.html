@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#e8eee6" />
+<title>STAGE 01 | 電波を届けよう — 基地局パズル</title>
+<style>
+  :root { --ink:#253f42; --muted:#667b7b; --teal:#127e7a; --paper:#f8faf6; --line:rgba(46,78,74,.12); }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; width:100%; height:100%; overflow:hidden; overscroll-behavior:none; background:#dbe5db; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif; color:var(--ink); }
+  button { font:inherit; cursor:pointer; }
+  #app { position:relative; width:100%; height:100%; overflow:hidden; isolation:isolate; background:radial-gradient(ellipse at 50% 35%,#ecf1e7 0,#e0e9df 67%,#cbd9cf 100%); }
+  canvas { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:grab; }
+  canvas.dragging {cursor:grabbing}
+  .grain { position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.18;background-image:url('data:image/svg+xml,%3Csvg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.64" numOctaves="2" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)" opacity=".11"/%3E%3C/svg%3E'); }
+  header { position:absolute;z-index:3;top:0;left:0;right:0; padding:calc(env(safe-area-inset-top) + 19px) 19px 22px; pointer-events:none; background:linear-gradient(#e9f0e9 0%,rgba(233,240,233,.90) 67%,rgba(233,240,233,0) 100%); }
+  .topline { display:flex;justify-content:space-between;align-items:start;gap:10px; }
+  .eyebrow{font-size:10px;font-weight:850;letter-spacing:.16em;color:#678583;line-height:1.8}
+  h1 { font-size:18px;letter-spacing:-.045em;margin:1px 0 7px;font-weight:850; }
+  .sub { font-size:10px; font-weight:650; color:#738884;letter-spacing:.03em; }
+  .score-card { min-width:130px;text-align:right; padding-top:2px; }
+  .score-label { color:#647e79;font-weight:750;font-size:10px; }
+  .score-row {display:flex;justify-content:flex-end;align-items:baseline;gap:3px;margin-top:1px}
+  #score {font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif; font-variant-numeric:tabular-nums; font-weight:850; font-size:38px;letter-spacing:-.065em;line-height:1.08;color:#176b6a;transition:color .2s}
+  .percent{font-size:16px;font-weight:750;color:#43847e}
+  .bar {height:6px;width:100%;border-radius:5px;background:rgba(55,99,87,.13);overflow:hidden;margin-top:8px}
+  .bar>i {display:block;width:0%;height:100%;background:linear-gradient(90deg,#87c4a1,#22928b);border-radius:5px;transition:width .22s}
+  .status {display:flex;justify-content:flex-end;gap:5px;font-size:9px;font-weight:740;color:#738884;margin-top:7px}
+  .status b {color:#388881}
+  #tip {position:absolute;z-index:3;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 136px); max-width:calc(100% - 40px); border-radius:50px;padding:10px 16px;font-size:11px;font-weight:770;white-space:nowrap;color:#366864;background:rgba(255,255,252,.95);box-shadow:0 6px 22px rgba(36,70,60,.09); border:1px solid rgba(74,116,109,.09);pointer-events:none;transition:opacity .3s,translate .3s}
+  #tip.hide{opacity:0;translate:0 -10px}
+  .bottom{position:absolute;z-index:4;left:0;right:0;bottom:0;padding:30px 18px calc(env(safe-area-inset-bottom) + 18px); pointer-events:none;background:linear-gradient(0deg,rgba(228,237,226,.98) 0%,rgba(228,237,226,.82) 45%,rgba(228,237,226,0) 100%);}
+  .control-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;}
+  .mini {pointer-events:auto;border:1px solid rgba(44,91,81,.14);background:rgba(255,255,251,.78); color:#5e7b78;border-radius:999px;padding:9px 11px;min-height:36px;font-size:10px;font-weight:800;display:flex;align-items:center;gap:7px;box-shadow:0 3px 9px rgba(34,60,54,.035)}
+  .mini svg {width:14px;height:14px}
+  #rotGuide{color:#5e817b;font-size:10px;font-weight:690;text-align:right;}
+  .cta { pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:56px;border:0;border-radius:17px;background:linear-gradient(125deg,#176e73,#148a82); box-shadow:0 8px 20px rgba(26,105,95,.22), inset 0 1px 0 rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:850;letter-spacing:.03em; }
+  .cta:active{transform:scale(.985)}
+  .cta svg{height:17px;width:17px;}
+  .under{display:flex;justify-content:center;margin-top:9px;font-size:10px;font-weight:670;color:#7d918a;gap:8px;}
+  .under strong {color:#396d66}
+  .help {position:absolute;z-index:4;right:18px;top:calc(env(safe-area-inset-top) + 120px);width:31px;height:31px;pointer-events:auto;border:1px solid rgba(69,96,86,.14);border-radius:50%;background:rgba(251,253,249,.83);font-size:14px;color:#59837c;font-weight:850;box-shadow:0 3px 14px #3e63531a}
+  .modal {position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(22,44,43,.38);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:1;transition:opacity .2s}
+  .modal.hidden {display:none}
+  .dialog {width:min(100%,365px);border-radius:24px;background:#fbfcf8;padding:30px 22px 21px;text-align:center;box-shadow:0 25px 70px #173c393a;}
+  .seal {width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,#fff6d2 0,#f5e2a1 69%,#e9c776 100%);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:35px;box-shadow:inset 0 0 0 5px #fff8d8,0 5px 23px #b8974138}
+  .dialog h2{font-size:22px;line-height:1.4;margin:8px 0 2px;font-weight:850}
+  .dialog .score-big{font-size:55px;letter-spacing:-.06em;font-weight:900;color:#177b75;line-height:1.4;font-variant-numeric:tabular-nums}
+  .dialog p{font-size:12px;line-height:1.9;color:#718681;margin:4px 0 15px}
+  .summary {background:#edf3ed;border-radius:14px;padding:12px 14px;margin:16px 0;display:flex;justify-content:space-between;font-size:12px;color:#557571;font-weight:760}
+  .summary b{color:#196c6b}
+  .dialog button {width:100%;border:0;border-radius:14px;padding:15px;color:#fff;background:#1e7876;font-weight:850;font-size:13px}
+  .dialog button.secondary {background:#edf3ed;color:#3f7770;margin-top:9px}
+  .dialog .foot{font-size:10px;color:#8b9b92;margin-top:13px}
+  #load-warning{position:absolute;z-index:20;display:none;left:10%;right:10%;top:40%;background:#fff;border-radius:16px;padding:20px;font-size:13px}
+  @media(min-width:700px){#app{max-width:490px;height:min(920px,100dvh);margin:auto;box-shadow:0 0 0 1px rgba(50,70,60,.08),0 15px 85px rgba(40,64,59,.12)} body{display:flex;justify-content:center;align-items:center;background:#cddad1} }
+  @media(max-height:690px){ header{padding-top:calc(env(safe-area-inset-top) + 11px)} #tip{top:calc(env(safe-area-inset-top) + 117px)} .help{top:calc(env(safe-area-inset-top) + 106px)} .bottom{padding-top:13px;padding-bottom:calc(env(safe-area-inset-bottom) + 8px)} .cta{min-height:48px}.under{margin-top:4px} }
+</style>
+</head>
+<body>
+<div id="app">
+ <canvas id="scene" aria-label="アンテナを指で回転させる3D基地局パズル"></canvas>
+ <div class="grain"></div>
+ <header>
+  <div class="topline">
+   <div><div class="eyebrow">STAGE 01 · LOW BAND</div><h1>電波を届けよう！</h1><div class="sub">屋上アンテナ × はじめての方位調整</div></div>
+   <div class="score-card"><div class="score-label">通信充足率</div><div class="score-row"><span id="score">0</span><span class="percent">%</span></div><div class="bar"><i id="scorebar"></i></div><div class="status">クリア <b>70%</b> ・ 完全攻略 <b>100%</b></div></div>
+  </div>
+ </header>
+ <button class="help" id="help" aria-label="操作方法を見る">?</button>
+ <div id="tip">👆 青いアンテナをタップして回してみよう</div>
+ <div class="bottom">
+  <div class="control-row"><button id="resetCamera" class="mini" aria-label="視点を戻す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 11a9 9 0 1 1 3 7"/><path d="M3 4v7h7"/></svg> 視点を戻す</button><div id="rotGuide">街をドラッグで回転 · 2本指で拡大</div></div>
+  <button id="complete" class="cta">整備完了 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <div class="under"><span>BEST <strong id="best">—</strong></span><span>·</span><span>何度でも試せます</span></div>
+ </div>
+ <div id="result" class="modal hidden" role="dialog" aria-modal="true" aria-label="ステージ結果"><div class="dialog">
+  <div class="seal" id="seal">🏅</div><div class="eyebrow" id="resultLabel">STAGE 01</div><h2 id="resultTitle">ステージクリア！</h2>
+  <div class="score-big" id="resultScore">100%</div><p id="resultText">アンテナの向きだけで、街の通信状況が改善しました。</p>
+  <div class="summary"><span>自己ベスト</span><b id="bestModal">100%</b></div>
+  <button id="continue">街に戻る・さらに調整</button><button class="secondary" id="restart">最初からやり直す</button>
+  <div class="foot">STAGE 1 プロトタイプ · 次のステージは未実装</div>
+ </div></div>
+ <div id="guide" class="modal hidden" role="dialog" aria-modal="true" aria-label="操作ガイド"><div class="dialog"><div class="seal">📡</div><h2>操作ガイド</h2><p style="text-align:left;padding:2px 8px">① 屋上の青いアンテナをタップ<br>② 表示されたリングをなぞって向きを変更<br>③ 利用者の赤い点が緑色に変わるよう調整<br>④ 「整備完了」で結果を記録<br><br>アンテナ以外の場所をドラッグすると街を回転できます。2本指のピンチでズーム、2本指の移動で視点をずらせます。</p><button id="guideClose">わかった！</button></div></div>
+ <div id="load-warning">表示処理で問題が発生しました。ページを再読み込みしてください。</div>
+</div>
+<script>
+(() => {
+'use strict';
+const app=document.getElementById('app'), canvas=document.getElementById('scene'), ctx=canvas.getContext('2d',{alpha:false});
+if(!ctx){document.getElementById('load-warning').style.display='block';return;}
+const TAU=Math.PI*2, RAD=Math.PI/180;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const norm=a=>Math.atan2(Math.sin(a),Math.cos(a));
+const rgb=(hex,d)=>{let n=parseInt(hex.slice(1),16);return '#'+[n>>16&255,n>>8&255,n&255].map(v=>clamp(v+d,0,255).toString(16).padStart(2,'0')).join('');};
+const dpr=()=>Math.min(devicePixelRatio||1,2);
+let W=0,H=0,D=1;
+let yaw= -0.57, elevation=45*RAD, scale=25, panX=0, panY=0;
+const home={yaw:-0.57,scale:25,panX:0,panY:0};
+const base={x:-0.25,z:-0.15,h:2.7};
+let heading=-Math.PI/2, headingDraw=-Math.PI/2, selected=false, tipDismissed=false;
+let score=0,displayScore=0, best=0, dirty=true, pointerHint=0, lastTime=0;
+const cameraState={drag:false,moved:false,id:null,x:0,y:0,headingStart:0,grab:0,startAngle:0};
+const touches=new Map(); let pinch=null;
+const stageID='station-puzzle-stage-01-v1';
+try{best=Number(localStorage.getItem(stageID)||0)||0}catch(e){}
+const buildings=[
+  {x:-3.70,z:-3.55,w:1.42,d:1.43,h:1.65,shade:'#b8c8b9',roof:'#d6ddd0',type:'home'},
+  {x:-1.70,z:-3.68,w:1.45,d:1.35,h:2.85,shade:'#b0c6c8',roof:'#d8e1dc',type:'flat'},
+  {x:.75,z:-3.65,w:1.6,d:1.30,h:1.95,shade:'#cebcb0',roof:'#e1d7ca',type:'home'},
+  {x:3.10,z:-3.65,w:1.52,d:1.42,h:2.45,shade:'#b7c4b6',roof:'#d7ded1',type:'flat'},
+  {x:-3.75,z:-1.1,w:1.38,d:1.42,h:2.35,shade:'#c2c6ce',roof:'#e1e2df',type:'flat'},
+  {x:-1.75,z:-1.15,w:1.50,d:1.62,h:2.15,shade:'#d1bdae',roof:'#e7d9c9',type:'home'},
+  {x:-.25,z:-.15,w:1.7,d:1.72,h:2.7,shade:'#7796a4',roof:'#c1d6d8',type:'station'},
+  {x:2.80,z:-1.15,w:1.40,d:1.37,h:1.6,shade:'#c2c9af',roof:'#dfe2cc',type:'shop'},
+  {x:4.35,z:-1.15,w:1.1,d:1.2,h:2.25,shade:'#bbafab',roof:'#d8ccc4',type:'home'},
+  {x:-3.7,z:1.45,w:1.50,d:1.30,h:1.65,shade:'#cbbca9',roof:'#e5dbc8',type:'home'},
+  {x:-1.7,z:1.48,w:1.40,d:1.38,h:1.90,shade:'#aec8c2',roof:'#d4e1d9',type:'flat'},
+  {x:.9,z:1.55,w:1.50,d:1.3,h:2.0,shade:'#bfc3cc',roof:'#dce0e6',type:'home'},
+  {x:3.5,z:1.56,w:1.45,d:1.3,h:2.8,shade:'#c6b8ae',roof:'#e2d6cf',type:'flat'},
+  {x:-3.6,z:3.65,w:1.55,d:1.25,h:1.90,shade:'#aebec4',roof:'#dce4df',type:'shop'},
+  {x:-1.35,z:3.65,w:1.55,d:1.38,h:1.65,shade:'#c8c6b3',roof:'#e3e3d4',type:'home'},
+  {x:1.05,z:3.68,w:1.50,d:1.42,h:2.2,shade:'#b4c4bc',roof:'#dee5db',type:'flat'}
+];
+const treeSpots=[[-4.9,-4.7],[-2.7,-4.85],[.05,-4.8],[2.25,-4.8],[4.9,-3.2],[-4.85,-2.1],[-4.8,.0],[4.85,.15],[-4.8,2.55],[-2.75,2.7],[3.0,3.1],[4.9,4.65],[.1,4.85],[-4.75,4.4]];
+// Each position represents a small population cluster; sub-points are invisible for a smoother, truthful weighted score.
+const groups=[
+  {x:3.25,z:-1.90,n:135},{x:4.05,z:-1.25,n:120},{x:4.38,z:-.45,n:165},
+  {x:3.35,z:.35,n:140},{x:4.22,z:1.03,n:120},{x:3.05,z:1.62,n:140},
+  {x:4.65,z:1.89,n:90},{x:3.25,z:-.85,n:90}
+];
+const total=groups.reduce((a,g)=>a+g.n,0);
+const samples=[];
+const offsets=[[0,0],[-.16,-.12],[.14,-.08],[-.12,.15],[.16,.12],[-.05,-.21],[.09,.22]];
+for(let gi=0;gi<groups.length;gi++)for(let k=0;k<offsets.length;k++)samples.push({gi,x:groups[gi].x+offsets[k][0],z:groups[gi].z+offsets[k][1],n:groups[gi].n/offsets.length});
+function currentSig(x,z,h=0){
+ const dx=x-base.x,dz=z-base.z,dist=Math.hypot(dx,dz),delta=norm(Math.atan2(dz,dx)-heading);
+ const angLoss=16*(1-Math.cos(delta));
+ const pathLoss=20*Math.log10(1+dist*.9);
+ const verticalPenalty=Math.abs(h-base.h)*.25;
+ return -53-pathLoss-angLoss-verticalPenalty;
+}
+const threshold=-78.4;
+function calculate(){
+ let sum=0;
+ for(const g of groups)g.good=0;
+ for(const p of samples){let ok=currentSig(p.x,p.z)>=threshold; if(ok){sum+=p.n;groups[p.gi].good+=p.n;}}
+ score=Math.round(sum/total*1000)/10;
+ dirty=true;
+}
+function shadeToHeat(db){
+ // Cool high signal / amber marginal / warm pink low signal; intentionally transparent to keep streets legible.
+ const t=clamp((db+96)/32,0,1);
+ let r,g,b;
+ if(t<.43){let u=t/.43;r=lerp(219,235,u);g=lerp(144,184,u);b=lerp(138,108,u)}
+ else if(t<.72){let u=(t-.43)/.29;r=lerp(235,133,u);g=lerp(184,196,u);b=lerp(108,173,u)}
+ else {let u=(t-.72)/.28;r=lerp(133,47,u);g=lerp(196,158,u);b=lerp(173,159,u)}
+ return `rgba(${r|0},${g|0},${b|0},.27)`;
+}
+function project(x,z,y=0){const c=Math.cos(yaw),s=Math.sin(yaw);return {x:W*.5 +panX +(x*c-z*s)*scale, y:H*.51+panY +(x*s+z*c)*Math.sin(elevation)*scale-y*Math.cos(elevation)*scale};}
+function path(points,fill,stroke,lw=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function worldRect(x1,z1,x2,z2,y,fill,stroke,lw){path([project(x1,z1,y),project(x2,z1,y),project(x2,z2,y),project(x1,z2,y)],fill,stroke,lw)}
+function line3(x1,z1,y1,x2,z2,y2,color,w=1){let a=project(x1,z1,y1),b=project(x2,z2,y2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=color;ctx.lineWidth=w;ctx.stroke()}
+function circle2(x,y,r,fill,stroke,lw=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function textAt(str,x,y,font,color,align='center'){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(str,x,y)}
+function drawGround(){
+ ctx.fillStyle='#e3ece2';ctx.fillRect(0,0,W,H);
+ // floating architectural diorama slab: low edge
+ let b=[[-5.55,-5.5],[5.55,-5.5],[5.55,5.5],[-5.55,5.5]].map(p=>project(p[0],p[1],0));
+ let edge=b.map(p=>({x:p.x+0,y:p.y+14}));
+ path([b[2],b[3],edge[3],edge[2]],'#a7b9a6');
+ path([b[1],b[2],edge[2],edge[1]],'#b1c2af');
+ path(b,'#dce8d9','#c8d8c8',1);
+ // fine park patches
+ worldRect(2.35,-2.45,5.24,2.25,.015,'#d3e3cb');
+ worldRect(-4.8,2.9,-2.2,5.15,.015,'#d1e4d2');
+ // roads: two longitudinal avenues and two cross streets
+ for(const x of [-2.75,1.80]){
+  worldRect(x-.42,-5.50,x+.42,5.50,.02,'#f1f0e9');
+  worldRect(x-.28,-5.50,x+.28,5.50,.025,'#dfdfd5');
+  for(let z=-4.85;z<5;z+=.93)worldRect(x-.022,z,x+.022,z+.41,.033,'rgba(255,255,251,.80)');
+ }
+ for(const z of [-2.35,2.50]){
+  worldRect(-5.55,z-.45,5.55,z+.45,.02,'#f1f0e9');
+  worldRect(-5.55,z-.30,5.55,z+.30,.03,'#dedfd6');
+  for(let x=-4.8;x<5;x+=1.02)worldRect(x,z-.023,x+.45,z+.023,.033,'rgba(255,255,251,.8)');
+ }
+ // accessible crosswalks at one intersection
+ for(let t=-.3;t<=.3;t+=.12){worldRect(1.56+t,-2.77,1.62+t,-2.63,.05,'#faf9f3')}
+ // pavements around blocks
+ for(const bl of buildings){if(bl.type!=='station')worldRect(bl.x-bl.w*.55,bl.z-bl.d*.55,bl.x+bl.w*.55,bl.z+bl.d*.55,.06,'rgba(255,255,252,.13)')}
+}
+function drawHeat(){
+ // Ground-plane heat shading; sampled from actual RSRP-like model.
+ let step=.36;
+ for(let x=-5.28;x<5.20;x+=step)for(let z=-5.22;z<5.21;z+=step){
+   const val=currentSig(x+step*.5,z+step*.5), fill=shadeToHeat(val);
+   worldRect(x,z,x+step+.015,z+step+.015,.07,fill);
+ }
+ // soft communication region contour (threshold isoline) using short marching squares approx omitted intentionally for clarity.
+}
+function drawBuilding(b){
+ const {x,z,w,d,h}=b,xa=x-w/2,xb=x+w/2,za=z-d/2,zb=z+d/2;
+ const top=[[xa,za],[xb,za],[xb,zb],[xa,zb]],bott=top.map(p=>project(...p,.09)),roof=top.map(p=>project(...p,h));
+ const gpts=top.map(p=>p[0]*Math.sin(yaw)+p[1]*Math.cos(yaw));
+ // soft ground shadow
+ const shadow=[project(xa+.25,za+.28,.04),project(xb+.40,za+.28,.04),project(xb+.40,zb+.25,.04),project(xa+.25,zb+.25,.04)];
+ path(shadow,'rgba(75,108,96,.11)');
+ // show 4 walls sorted by transformed depth to handle camera orbit.
+ const sides=[];
+ for(let i=0;i<4;i++){let j=(i+1)%4;let mx=(top[i][0]+top[j][0])/2,mz=(top[i][1]+top[j][1])/2;
+   const projDist=mx*Math.sin(yaw)+mz*Math.cos(yaw);
+   sides.push({i,j,dep:projDist,pts:[bott[i],bott[j],roof[j],roof[i]]});
+ }
+ sides.sort((a,b)=>a.dep-b.dep);
+ for(let wall of sides){
+   const avgLight=((wall.i%2)===0)?-8:-21;
+   path(wall.pts,rgb(b.shade,avgLight),'rgba(78,112,110,.13)',.8);
+   let pa=top[wall.i],pb=top[wall.j];
+   const floors=Math.max(1,Math.floor(h/.7));
+   if(Math.abs((pa[0]-pb[0])+(pa[1]-pb[1]))>.01){
+     for(let floor=0;floor<floors;floor++){
+       let y0=.25+floor*.65; if(y0+.31>=h-.08)continue;
+       for(let u=.22;u<.94;u+=.31){
+         let qx=lerp(pa[0],pb[0],u),qz=lerp(pa[1],pb[1],u),rx=lerp(pa[0],pb[0],u+.16),rz=lerp(pa[1],pb[1],u+.16);
+         let poly=[project(qx,qz,y0),project(rx,rz,y0),project(rx,rz,y0+.28),project(qx,qz,y0+.28)];
+         path(poly,'rgba(241,250,243,.54)');
+       }
+     }
+   }
+ }
+ path(roof,b.roof,'rgba(85,114,108,.14)',1);
+ // rooftop parapet and details in actual 3D coordinates
+ for(let i=0;i<4;i++){let j=(i+1)%4;line3(top[i][0],top[i][1],h+.07,top[j][0],top[j][1],h+.07,'rgba(252,255,250,.65)',Math.max(.5,scale*.052));}
+ if(b.type==='flat'||b.type==='station'){
+   const hv=project(x-w*.24,z-d*.12,h+.065), hv2=project(x-w*.02,z+d*.13,h+.065);
+   ctx.fillStyle='rgba(70,116,122,.20)';ctx.fillRect(hv.x-2,hv.y-3,8,5);
+   ctx.fillStyle='rgba(255,255,254,.65)';ctx.fillRect(hv2.x-2,hv2.y-2,10,6);
+   if(b.type==='flat'){
+      let p=project(x+w*.22,z-d*.22,h+.04);circle2(p.x,p.y,scale*.07,'#a6b4b0');
+   }
+ }
+ if(b.type==='shop'){
+   let p=project(x,z,h+.045);ctx.strokeStyle='rgba(165,184,164,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-6,p.y-3);ctx.lineTo(p.x+7,p.y-3);ctx.stroke();
+ }
+ if(b.type==='station')drawAntenna();
+}
+function drawTree(x,z,i){
+ let p=project(x,z,.05),top=project(x,z,.70+(i%3)*.08);
+ line3(x,z,.08,x,z,.52,'#948671',Math.max(1,scale*.065));
+ circle2(top.x+2,top.y+3,scale*.23,'rgba(50,85,58,.12)');
+ circle2(top.x,top.y,scale*.24,(['#a2c29b','#99bda9','#afc9a3','#87b5a4'][i%4]),'rgba(79,123,94,.1)',1);
+ circle2(top.x-scale*.06,top.y-scale*.10,scale*.095,'rgba(243,253,232,.24)');
+}
+function drawAntenna(){
+ const roof=project(base.x,base.z,base.h+.04), mast=project(base.x,base.z,base.h+.98);
+ // beacon shadow on roof
+ circle2(roof.x,roof.y,scale*.21,'rgba(23,107,121,.19)');
+ line3(base.x,base.z,base.h+.06,base.x,base.z,base.h+.98,'#f6ffff',scale*.115);
+ line3(base.x,base.z,base.h+.08,base.x,base.z,base.h+.98,'#557f8b',scale*.066);
+ const dirX=Math.cos(heading)*.27,dirZ=Math.sin(heading)*.27;
+ const end=project(base.x+dirX,base.z+dirZ,base.h+.90);
+ line3(base.x,base.z,base.h+.87,base.x+dirX,base.z+dirZ,base.h+.90,'#2b8ca0',Math.max(2,scale*.19));
+ circle2(mast.x,mast.y,Math.max(3,scale*.125),'#168eac','#f6ffff',2);
+ circle2(end.x,end.y,Math.max(3,scale*.09),'#e4f8ff','#187f9d',1.5);
+ // glowing world marker above roof, always visible for onboarding
+ if(!selected){circle2(mast.x,mast.y,scale*.38,'rgba(42,155,180,.14)');}
+}
+function stationCenter(){return project(base.x,base.z,base.h+.97)}
+function ringAngle(){return heading + yaw;}
+function drawRing(time){
+ if(!selected){
+   const p=stationCenter(),r=20+Math.sin(time*.003)*2;
+   ctx.strokeStyle='rgba(24,129,155,.48)';ctx.lineWidth=2;
+   ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.stroke();
+   return;
+ }
+ const p=stationCenter(),R=55;
+ circle2(p.x,p.y,R,'rgba(245,253,252,.065)');
+ ctx.beginPath();ctx.arc(p.x,p.y,R,0,TAU);ctx.strokeStyle='rgba(255,255,255,.87)';ctx.lineWidth=8;ctx.stroke();
+ ctx.beginPath();ctx.arc(p.x,p.y,R,0,TAU);ctx.strokeStyle='rgba(33,126,147,.51)';ctx.lineWidth=1.9;ctx.stroke();
+ for(let t=0;t<12;t++){
+   let a=t*TAU/12, ca=Math.cos(a),sa=Math.sin(a),inner=(t%3===0)?R-10:R-5;
+   ctx.beginPath();ctx.moveTo(p.x+ca*inner,p.y+sa*inner);ctx.lineTo(p.x+ca*(R-2),p.y+sa*(R-2));ctx.strokeStyle='rgba(47,119,128,.49)';ctx.lineWidth=t%3===0?1.9:1;ctx.stroke();
+ }
+ const a=ringAngle(),tx=p.x+Math.cos(a)*R,ty=p.y+Math.sin(a)*R;
+ ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(tx,ty);ctx.strokeStyle='rgba(27,134,160,.58)';ctx.lineWidth=2;ctx.stroke();
+ circle2(tx,ty,14,'rgba(252,255,255,.93)','#2789a7',2.5);
+ circle2(tx,ty,5.5,'#2998aa');
+ // Ring never occludes user dots; it is anchored around active antenna only.
+}
+function drawPeople(){
+ // World-anchored billboards that scale subtly with zoom to avoid covering the map.
+ const factor=clamp(scale/25,.85,1.25);
+ for(const g of groups){
+   let p=project(g.x,g.z,.15),fr=g.good/g.n;
+   let color=fr>.98?'#279c82':fr<.02?'#db766d':'#e0a858';
+   // drop shadow, translucent halo
+   circle2(p.x+1,p.y+2,9.5*factor,'rgba(35,65,58,.10)');
+   circle2(p.x,p.y,7.8*factor,'rgba(255,255,252,.94)');
+   circle2(p.x,p.y,5.5*factor,color);
+   if(g.n>=140 && scale>21){
+     let label=`${g.n}人`,tx=p.x,ty=p.y-19*factor;
+     ctx.font=`750 ${10*factor}px -apple-system, sans-serif`;let ww=ctx.measureText(label).width+15;
+     ctx.fillStyle='rgba(253,255,252,.93)';
+     rounded(tx-ww/2,ty-11*factor,ww,20*factor,10*factor,true);
+     textAt(label,tx,ty-1,`750 ${10*factor}px -apple-system, sans-serif`,'#56746f');
+   }
+ }
+}
+function rounded(x,y,w,h,r,fill){
+ ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill)ctx.fill();
+}
+function drawWorld(time){
+ // scene gradient & diffuse light
+ let bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#e5eee4');bg.addColorStop(1,'#d9e5da');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ ctx.save();ctx.shadowColor='rgba(49,77,60,.085)';ctx.shadowBlur=18;drawGround();ctx.restore();
+ drawHeat();
+ const objs=buildings.map((b,i)=>({kind:'b',b,dep:b.x*Math.sin(yaw)+b.z*Math.cos(yaw),id:i}));
+ treeSpots.forEach((p,i)=>objs.push({kind:'tree',x:p[0],z:p[1],dep:p[0]*Math.sin(yaw)+p[1]*Math.cos(yaw),id:i}));
+ objs.sort((a,b)=>a.dep-b.dep);
+ for(const o of objs){if(o.kind==='b')drawBuilding(o.b);else drawTree(o.x,o.z,o.id)}
+ drawPeople();drawRing(time);
+ // discreet compass in the world area, lower left
+ const cx=26,cy=H*.69;
+ if(cy>150&&cy<H-125){
+   circle2(cx,cy,15,'rgba(252,255,251,.67)','rgba(49,104,93,.10)');
+   let a=yaw-Math.PI/2;
+   ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*10,cy+Math.sin(a)*10);ctx.lineTo(cx+Math.cos(a+2.5)*5,cy+Math.sin(a+2.5)*5);ctx.lineTo(cx+Math.cos(a-2.5)*5,cy+Math.sin(a-2.5)*5);ctx.closePath();ctx.fillStyle='#287f83';ctx.fill();
+   textAt('N',cx,cy+23,'800 9px -apple-system,sans-serif','#699088');
+ }
+}
+function resize(){
+ const r=app.getBoundingClientRect();W=Math.max(2,r.width);H=Math.max(2,r.height);D=dpr();canvas.width=Math.round(W*D);canvas.height=Math.round(H*D);ctx.setTransform(D,0,0,D,0,0);
+ // width-based fit, constrained to retain scene legibility in portrait
+ const fit=clamp(W/390, .78,1.27);
+ if(home.scale===25){home.scale=clamp(25*fit,20,30);scale=home.scale;}
+ dirty=true;calculate();
+}
+function updateScoreUI(){
+ document.getElementById('score').textContent=displayScore.toFixed(0);
+ document.getElementById('scorebar').style.width=clamp(displayScore,0,100)+'%';
+ document.getElementById('best').textContent=best?best.toFixed(1).replace(/\.0$/,'')+'%':'—';
+}
+function animate(time){
+ const delta=Math.min(time-lastTime||16,50);lastTime=time;
+ if(Math.abs(norm(heading-headingDraw))>.001){headingDraw+=norm(heading-headingDraw)*Math.min(1,delta*.019);dirty=true;}
+ if(Math.abs(score-displayScore)>.04){displayScore+=clamp(score-displayScore,-delta*.14,delta*.14);dirty=true;}
+ else displayScore=score;
+ if(dirty || selected || !tipDismissed){
+  ctx.setTransform(D,0,0,D,0,0);drawWorld(time);updateScoreUI();dirty=false;
+ }
+ requestAnimationFrame(animate);
+}
+function hideTip(){tipDismissed=true;document.getElementById('tip').classList.add('hide')}
+function startPointer(ev){
+ if(document.getElementById('guide').classList.contains('hidden')===false||document.getElementById('result').classList.contains('hidden')===false)return;
+ ev.preventDefault();canvas.setPointerCapture(ev.pointerId);touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+ const b=canvas.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;
+ if(touches.size>=2){
+   let pts=[...touches.values()]; pinch={d:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2,scale,panX,panY}; cameraState.id=null;return;
+ }
+ const p=stationCenter(),distance=Math.hypot(x-p.x,y-p.y);
+ cameraState.id=ev.pointerId;cameraState.x=x;cameraState.y=y;cameraState.moved=false;
+ if(distance<(selected?80:37)){
+   selected=true;cameraState.drag=distance<24?'aim':'antenna';cameraState.startAngle=Math.atan2(y-p.y,x-p.x);
+   cameraState.headingStart=heading;
+   // A ring can be touched anywhere, direct drag when near antenna adjusts heading without a jump.
+   hideTip();
+ }else{
+   cameraState.drag='orbit';
+   // tap elsewhere deselects if no meaningful drag later
+ }
+ canvas.classList.add('dragging');dirty=true;
+}
+function movePointer(ev){
+ if(!touches.has(ev.pointerId))return;ev.preventDefault();touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+ if(touches.size>=2){
+  let pts=[...touches.values()];let d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;
+  if(!pinch)pinch={d,x:cx,y:cy,scale,panX,panY};
+  scale=clamp(pinch.scale*(d/(pinch.d||1)),16,48);panX=clamp(pinch.panX+(cx-pinch.x),-W*.25,W*.25);panY=clamp(pinch.panY+(cy-pinch.y),-H*.20,H*.20);dirty=true;return;
+ }
+ if(cameraState.id!==ev.pointerId)return;
+ const b=canvas.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top,dx=x-cameraState.x,dy=y-cameraState.y;
+ if(Math.abs(dx)+Math.abs(dy)>4)cameraState.moved=true;
+ if(cameraState.drag==='antenna'||cameraState.drag==='aim'){
+   const p=stationCenter(),a=Math.atan2(y-p.y,x-p.x);
+   if(cameraState.drag==='aim'){
+     if(Math.hypot(x-p.x,y-p.y)>17){heading=norm(a-yaw);calculate();}
+   }else{heading=norm(cameraState.headingStart+norm(a-cameraState.startAngle));calculate();}
+ }else if(cameraState.drag==='orbit'){
+   yaw=norm(yaw+dx*.0068);
+   // slight vertical travel adjusts tilt, not height or antenna geometry
+   elevation=clamp(elevation+dy*.0025,29*RAD,64*RAD);
+   cameraState.x=x;cameraState.y=y;dirty=true;
+ }
+}
+function endPointer(ev){
+ if(!touches.has(ev.pointerId))return;
+ touches.delete(ev.pointerId);
+ if(touches.size<2)pinch=null;
+ if(cameraState.id===ev.pointerId){
+   if(cameraState.drag==='orbit'&&!cameraState.moved)selected=false;
+   cameraState.id=null;
+ }
+ canvas.classList.remove('dragging');dirty=true;
+}
+canvas.addEventListener('pointerdown',startPointer,{passive:false});
+canvas.addEventListener('pointermove',movePointer,{passive:false});
+canvas.addEventListener('pointerup',endPointer);
+canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('wheel',e=>{e.preventDefault();scale=clamp(scale*(e.deltaY>0?.91:1.09),16,48);dirty=true;},{passive:false});
+document.getElementById('resetCamera').addEventListener('click',()=>{yaw=home.yaw;elevation=45*RAD;scale=home.scale;panX=panY=0;dirty=true});
+const result=document.getElementById('result');
+function showResult(){
+ const sc=score;
+ if(sc>best){best=sc;try{localStorage.setItem(stageID,String(best))}catch(e){}}
+ document.getElementById('resultScore').textContent=sc.toFixed(1).replace(/\.0$/,'')+'%';
+ document.getElementById('bestModal').textContent=best.toFixed(1).replace(/\.0$/,'')+'%';
+ let title,description,seal,label;
+ if(sc>=99.95){title='完全攻略！';description='通信充足率100%。街の全利用者に電波を届けました！';seal='🏆';label='PERFECT · STAGE 01';}
+ else if(sc>=70){title='ステージクリア！';description='通信環境を改善できました。100%を目指して、さらに調整してみよう。';seal='🏅';label='CLEAR · STAGE 01';}
+ else {title='あと少し！';description='クリア目標は70%。アンテナの向きを変えると通信できる人が増えます。';seal='📡';label='KEEP TRYING · STAGE 01';}
+ document.getElementById('resultTitle').textContent=title;document.getElementById('resultText').textContent=description;document.getElementById('seal').textContent=seal;document.getElementById('resultLabel').textContent=label;
+ result.classList.remove('hidden');
+}
+document.getElementById('complete').addEventListener('click',showResult);
+document.getElementById('continue').addEventListener('click',()=>{result.classList.add('hidden');dirty=true});
+document.getElementById('restart').addEventListener('click',()=>{result.classList.add('hidden');heading=-Math.PI/2;headingDraw=heading;selected=false;yaw=home.yaw;elevation=45*RAD;panX=panY=0;scale=home.scale;calculate();dirty=true});
+document.getElementById('help').addEventListener('click',()=>document.getElementById('guide').classList.remove('hidden'));
+document.getElementById('guideClose').addEventListener('click',()=>document.getElementById('guide').classList.add('hidden'));
+window.addEventListener('resize',resize);
+window.addEventListener('orientationchange',()=>setTimeout(resize,100));
+resize();calculate();requestAnimationFrame(animate);
+window.__stationPrototype={get score(){return score},get heading(){return heading},setHeading:(d)=>{heading=d*RAD;selected=true;hideTip();calculate()},get selected(){return selected},reset:()=>{heading=-Math.PI/2;selected=false;calculate()}};
+})();
+</script>
+</body>
+</html>
